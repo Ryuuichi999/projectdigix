@@ -1,34 +1,45 @@
 <script setup>
-definePageMeta({ layout: false })
+definePageMeta({ layout: false });
 
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-const username = ref('')
-const email = ref('')
-const password = ref('')
-const router = useRouter()
+const username = ref('');
+const email = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const router = useRouter();
 
 const handleRegister = async () => {
+  // Client-side validation
+  if (!username.value || !email.value || !password.value || !confirmPassword.value) {
+    alert('Please fill in all fields');
+    return;
+  }
+  if (password.value !== confirmPassword.value) {
+    alert('Passwords do not match');
+    return;
+  }
+
   try {
-    await $fetch('http://localhost:3000/registeruser', {
+    const response = await $fetch('http://localhost:3000/users', {
       method: 'POST',
       body: {
         username: username.value,
         email: email.value,
         password: password.value,
-        role: 'user' 
-      }
-    })
+        confirmPassword: confirmPassword.value,
+        role: 'user',
+      },
+    });
 
-    alert('สมัครสมาชิกสำเร็จ')
-    router.push('/auth/login')
+    alert('สมัครสมาชิกสำเร็จ');
+    router.push('/');
   } catch (err) {
-    alert('สมัครสมาชิกล้มเหลว: ' + (err?.data?.message || err.message))
+    alert('สมัครสมาชิกล้มเหลว: ' + (err?.data?.message || err.message));
   }
-}
+};
 </script>
-
 
 <template>
   <div class="min-h-screen bg-amber-50 flex items-center justify-center p-4">
@@ -78,7 +89,7 @@ const handleRegister = async () => {
               required
             />
           </div>
-          <div class="mb-6">
+          <div class="mb-4">
             <label for="password" class="block text-gray-700 mb-1 font-medium"
               >รหัสผ่าน</label
             >
@@ -88,6 +99,19 @@ const handleRegister = async () => {
               type="password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
               placeholder="กรอกรหัสผ่าน"
+              required
+            />
+          </div>
+          <div class="mb-6">
+            <label for="confirmPassword" class="block text-gray-700 mb-1 font-medium"
+              >ยืนยันรหัสผ่าน</label
+            >
+            <input
+              id="confirmPassword"
+              v-model="confirmPassword"
+              type="password"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+              placeholder="ยืนยันรหัสผ่าน"
               required
             />
           </div>

@@ -23,7 +23,6 @@
 
     <div class="flex items-center space-x-4 mr-2">
       <!-- ช่องค้นหา -->
-
       <div
         v-if="userRole !== 'admin'"
         class="flex items-center bg-white rounded-full px-4 py-2 max-w-xl shadow"
@@ -81,7 +80,7 @@
               "
             />
           </div>
-          <span class="text-white font-semibold"> {{ userName }}</span>
+          <span class="text-white font-semibold">{{ userName }}</span>
         </div>
         <div v-else class="flex space-x-2">
           <nuxt-link
@@ -101,9 +100,10 @@
         <!-- Dropdown เมนู -->
         <div
           v-if="isDropdownOpen"
-          class="absolute  mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
+          class="absolute  -ml-15  mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
           ref="dropdown"
         >
+          
           <button
             @click="logout"
             class="w-full text-left px-4 py-2 hover:bg-amber-200 rounded-lg transition duration-200 flex items-center cursor-pointer"
@@ -130,7 +130,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
 
@@ -146,14 +146,27 @@ const dropdown = ref(null);
 
 onMounted(() => {
   if (process.client) {
-    // จำกัดการทำงานเฉพาะฝั่งไคลเอนต์
-    user.value = JSON.parse(localStorage.getItem("user") || "{}");
+    const storedUser = localStorage.getItem("user");
+    user.value = storedUser ? JSON.parse(storedUser) : { loggedIn: false, name: "", role: "" };
     cart.value = JSON.parse(localStorage.getItem("cart") || "[]");
 
     // ฟัง event เพื่ออัปเดตตะกร้า
     $event.on("cart-updated", () => {
       cart.value = JSON.parse(localStorage.getItem("cart") || "[]");
     });
+
+    // ตรวจสอบการเปลี่ยนแปลงใน localStorage
+    const checkUserUpdate = () => {
+      const newUser = localStorage.getItem("user");
+      if (newUser) {
+        const parsedUser = JSON.parse(newUser);
+        if (user.value?.role !== parsedUser.role) {
+          user.value = parsedUser;
+        }
+      }
+    };
+    window.addEventListener("storage", checkUserUpdate);
+    onUnmounted(() => window.removeEventListener("storage", checkUserUpdate));
   }
 
   // ปิด Dropdown เมื่อคลิกนอก
@@ -204,6 +217,11 @@ const logout = () => {
   isDropdownOpen.value = false;
   router.push("/");
   alert("ออกจากระบบเรียบร้อยแล้ว");
+};
+
+const goToAdminPanel = () => {
+  router.push("/admin");
+  isDropdownOpen.value = false;
 };
 </script>
 
