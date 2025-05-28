@@ -1,21 +1,25 @@
-require('dotenv').config({ path: '.env.local' });
-const Hapi = require('@hapi/hapi');
-const { prismaPlugin } = require('./src/plugins/prisma');
-const routes = require('./src/routes');
-const { swaggerPlugin } = require('./src/plugins/swagger');
-const { authPlugin } = require('./src/plugins/auth');
+require("dotenv").config({ path: ".env.local" });
+const Hapi = require("@hapi/hapi");
+const { prismaPlugin } = require("./src/plugins/prisma");
+const routes = require("./src/routes");
+const { swaggerPlugin } = require("./src/plugins/swagger");
+const { authPlugin } = require("./src/plugins/auth");
 
 const init = async () => {
-  const server = Hapi.server({  
+  const server = Hapi.server({
     port: process.env.PORT || 3000,
-    host: '0.0.0.0',
+    host: "0.0.0.0",
     routes: {
+      cors: {
+        origin: ['*'],// ✅ อนุญาตเฉพาะ Nuxt frontend
+        credentials: true,
+      },
       validate: {
         failAction: async (request, h, err) => {
           throw err; // Show detailed validation errors during development
-        }
-      }
-    }
+        },
+      },
+    },
   });
 
   await server.register(authPlugin);
@@ -27,13 +31,12 @@ const init = async () => {
   // Register the Swagger plugin for API documentation
   // url: '/documentation',
   server.route(routes);
- 
 
   await server.start();
   console.log(`🚀 Server running at: ${server.info.uri}`);
 };
 
-process.on('unhandledRejection', (err) => {
+process.on("unhandledRejection", (err) => {
   console.error(err);
   process.exit(1);
 });
