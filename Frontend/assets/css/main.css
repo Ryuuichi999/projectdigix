@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap');
+@import "tailwindcss";
+@import "@nuxt/ui";
+@import "@nuxt/ui-pro";
+
+body {
+  font-family: 'Prompt', 'Noto Sans Thai', 'sans-serif';
+}
+
+
+html, body {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scrollbar-width: none; 
+}
+
+html::-webkit-scrollbar {
+  display: none; 
+}

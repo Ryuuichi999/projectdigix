@@ -1,0 +1,15 @@
+<script setup>
+definePageMeta({
+  layout: 'default'
+})
+</script>
+
+<template>
+  <div class="bg-amber-100 min-h-screen">
+    <Banner />
+    <CategoryList />
+    <div id="book-list" class="p-6">
+      <BookList />
+    </div>
+  </div>
+</template>
