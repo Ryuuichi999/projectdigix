@@ -4,25 +4,20 @@ definePageMeta({ layout: false })
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-const name = ref('')
+const username = ref('')
 const email = ref('')
 const password = ref('')
-const confirmPassword = ref('')
 const router = useRouter()
 
 const handleRegister = async () => {
-  if (password.value !== confirmPassword.value) {
-    alert('รหัสผ่านไม่ตรงกัน')
-    return
-  }
-
   try {
     await $fetch('http://localhost:3000/registeruser', {
       method: 'POST',
       body: {
-        name: name.value,
+        username: username.value,
         email: email.value,
-        password: password.value
+        password: password.value,
+        role: 'user' 
       }
     })
 
@@ -34,10 +29,12 @@ const handleRegister = async () => {
 }
 </script>
 
+
 <template>
   <div class="min-h-screen bg-amber-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl flex flex-col md:flex-row-reverse w-full max-w-4xl overflow-hidden">
-      
+    <div
+      class="bg-white rounded-2xl shadow-xl flex flex-col md:flex-row-reverse w-full max-w-4xl overflow-hidden"
+    >
       <!-- รูปภาพฝั่งขวา -->
       <ClientOnly>
         <div class="md:w-1/2 hidden md:block">
@@ -51,13 +48,17 @@ const handleRegister = async () => {
 
       <!-- ฟอร์มฝั่งซ้าย -->
       <div class="md:w-1/2 p-8 flex flex-col justify-center">
-        <h2 class="text-3xl font-bold mb-6 text-center text-amber-600">สมัครสมาชิก</h2>
+        <h2 class="text-3xl font-bold mb-6 text-center text-amber-600">
+          สมัครสมาชิก
+        </h2>
         <form @submit.prevent="handleRegister">
           <div class="mb-4">
-            <label for="name" class="block text-gray-700 mb-1 font-medium">ชื่อผู้ใช้</label>
+            <label for="username" class="block text-gray-700 mb-1 font-medium"
+              >ชื่อผู้ใช้</label
+            >
             <input
-              id="name"
-              v-model="name"
+              id="username"
+              v-model="username"
               type="text"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
               placeholder="กรอกชื่อผู้ใช้"
@@ -65,7 +66,9 @@ const handleRegister = async () => {
             />
           </div>
           <div class="mb-4">
-            <label for="email" class="block text-gray-700 mb-1 font-medium">อีเมล</label>
+            <label for="email" class="block text-gray-700 mb-1 font-medium"
+              >อีเมล</label
+            >
             <input
               id="email"
               v-model="email"
@@ -75,25 +78,16 @@ const handleRegister = async () => {
               required
             />
           </div>
-          <div class="mb-4">
-            <label for="password" class="block text-gray-700 mb-1 font-medium">รหัสผ่าน</label>
+          <div class="mb-6">
+            <label for="password" class="block text-gray-700 mb-1 font-medium"
+              >รหัสผ่าน</label
+            >
             <input
               id="password"
               v-model="password"
               type="password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
               placeholder="กรอกรหัสผ่าน"
-              required
-            />
-          </div>
-          <div class="mb-6">
-            <label for="confirmPassword" class="block text-gray-700 mb-1 font-medium">ยืนยันรหัสผ่าน</label>
-            <input
-              id="confirmPassword"
-              v-model="confirmPassword"
-              type="password"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
-              placeholder="ยืนยันรหัสผ่าน"
               required
             />
           </div>
@@ -106,7 +100,10 @@ const handleRegister = async () => {
         </form>
         <div class="mt-6 text-center">
           <span class="text-gray-600">มีบัญชีอยู่แล้ว?</span>
-          <NuxtLink to="/auth/login" class="text-amber-600 hover:underline ml-1 font-medium">
+          <NuxtLink
+            to="/auth/login"
+            class="text-amber-600 hover:underline ml-1 font-medium"
+          >
             เข้าสู่ระบบ
           </NuxtLink>
         </div>

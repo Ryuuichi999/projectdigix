@@ -5,17 +5,29 @@
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">
       <div class="w-15 h-15 shadow-lg rounded-full overflow-hidden">
-        <img src="/images/Logo.jpg" alt="Logo" class="w-full h-full object-cover" />
+        <img
+          src="/images/Logo.jpg"
+          alt="Logo"
+          class="w-full h-full object-cover"
+        />
       </div>
       <span class="ml-4 text-lg font-semibold whitespace-nowrap drop-shadow">
         ร้านที่รวบรวมหนังสือน้อยที่สุดในประเทศไทย
-        <img src="/images/โป้ง.webp" alt="โป้ง" class="inline-block w-10 h-10 ml-2" />
+        <img
+          src="/images/โป้ง.webp"
+          alt="โป้ง"
+          class="inline-block w-10 h-10 ml-2"
+        />
       </span>
     </div>
 
     <div class="flex items-center space-x-4 mr-2">
       <!-- ช่องค้นหา -->
-      <div class="flex items-center bg-white rounded-full px-4 py-2 max-w-xl shadow">
+
+      <div
+        v-if="userRole !== 'admin'"
+        class="flex items-center bg-white rounded-full px-4 py-2 max-w-xl shadow"
+      >
         <svg
           class="w-5 h-5 text-gray-500 mr-2"
           fill="none"
@@ -35,6 +47,7 @@
 
       <!-- ไอคอนตะกร้า -->
       <nuxt-link
+        v-if="userRole !== 'admin'"
         to="/cart"
         @click.prevent="handleCartClick"
         class="relative flex items-center"
@@ -56,15 +69,19 @@
           @click="toggleDropdown"
           ref="userIcon"
         >
-  
           <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
             <img
               src="/images/icon.jpg"
               alt="User Icon"
               class="w-full h-full object-cover"
+              @error="
+                (e) =>
+                  (e.target.src =
+                    'https://cdn-icons-png.flaticon.com/512/149/149071.png')
+              "
             />
           </div>
-          <span class="text-white font-semibold">{{ userName }}</span>
+          <span class="text-white font-semibold"> {{ userName }}</span>
         </div>
         <div v-else class="flex space-x-2">
           <nuxt-link
@@ -84,12 +101,12 @@
         <!-- Dropdown เมนู -->
         <div
           v-if="isDropdownOpen"
-          class="absolute  mt-2 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
+          class="absolute  mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
           ref="dropdown"
         >
           <button
             @click="logout"
-            class="w-full text-left px-4 py-2 hover:bg-amber-200 rounded-lg transition duration-200 flex items-center"
+            class="w-full text-left px-4 py-2 hover:bg-amber-200 rounded-lg transition duration-200 flex items-center cursor-pointer"
           >
             <svg
               class="w-5 h-5 mr-2"
@@ -113,10 +130,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useNuxtApp } from "nuxt/app";
 
 const router = useRouter();
+const { $event } = useNuxtApp();
 
 // เก็บข้อมูลผู้ใช้และตะกร้า
 const user = ref(null);
@@ -127,8 +146,14 @@ const dropdown = ref(null);
 
 onMounted(() => {
   if (process.client) {
-    user.value = JSON.parse(localStorage.getItem('user') || '{}');
-    cart.value = JSON.parse(localStorage.getItem('cart') || '[]');
+    // จำกัดการทำงานเฉพาะฝั่งไคลเอนต์
+    user.value = JSON.parse(localStorage.getItem("user") || "{}");
+    cart.value = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    // ฟัง event เพื่ออัปเดตตะกร้า
+    $event.on("cart-updated", () => {
+      cart.value = JSON.parse(localStorage.getItem("cart") || "[]");
+    });
   }
 
   // ปิด Dropdown เมื่อคลิกนอก
@@ -142,25 +167,18 @@ onMounted(() => {
       isDropdownOpen.value = false;
     }
   };
-  document.addEventListener('click', handleClickOutside);
+  document.addEventListener("click", handleClickOutside);
 
   // ทำความสะอาด event listener
   onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener("click", handleClickOutside);
+    $event.off("cart-updated");
   });
 });
 
-// อัปเดตตะกร้าเมื่อ localStorage เปลี่ยน
-watch(
-  () => localStorage.getItem('cart'),
-  (newCart) => {
-    cart.value = JSON.parse(newCart || '[]');
-  }
-);
-
 const isLoggedIn = computed(() => user.value?.loggedIn || false);
-const userName = computed(() => user.value?.name || '');
-const userRole = computed(() => user.value?.role || '');
+const userName = computed(() => user.value?.name || "");
+const userRole = computed(() => user.value?.role || "");
 const cartCount = computed(() => cart.value.length);
 
 const toggleDropdown = () => {
@@ -169,23 +187,23 @@ const toggleDropdown = () => {
 
 const handleCartClick = () => {
   if (!isLoggedIn.value) {
-    alert('กรุณาเข้าสู่ระบบก่อนใช้งานตะกร้า');
-    router.push('/auth/login');
+    alert("กรุณาเข้าสู่ระบบก่อนใช้งานตะกร้า");
+    router.push("/auth/login");
   } else {
-    router.push('/cart');
+    router.push("/cart");
   }
 };
 
 const logout = () => {
   if (process.client) {
-    localStorage.removeItem('user');
-    localStorage.removeItem('cart'); // ลบตะกร้าเมื่อออกจากระบบ
+    localStorage.removeItem("user");
+    localStorage.removeItem("cart");
   }
-  user.value = { loggedIn: false, name: '', role: '' };
+  user.value = { loggedIn: false, name: "", role: "" };
   cart.value = [];
   isDropdownOpen.value = false;
-  router.push('/');
-  alert('ออกจากระบบเรียบร้อยแล้ว');
+  router.push("/");
+  alert("ออกจากระบบเรียบร้อยแล้ว");
 };
 </script>
 

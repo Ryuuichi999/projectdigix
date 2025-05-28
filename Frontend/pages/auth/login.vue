@@ -4,36 +4,41 @@ definePageMeta({ layout: false });
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-// ข้อมูลจำลองสำหรับ User และ Admin
-const mockUsers = [
-  { email: 'user1@example.com', password: '123', name: 'Ryuuichi', role: 'user' },
-  { email: 'user2@example.com', password: 'password456', name: 'สมหญิง', role: 'user' },
-  { email: 'admin@example.com', password: 'admin123', name: 'แอดมิน', role: 'admin' },
-];
-
 const email = ref('');
 const password = ref('');
 const router = useRouter();
 
 const handleLogin = async () => {
-  const user = mockUsers.find(
-    (u) => u.email === email.value && u.password === password.value
-  );
-  if (user) {
+  try {
+    const response = await $fetch('http://localhost:3000/login', {
+      method: 'POST',
+      body: { email: email.value, password: password.value },
+    });
+
+    const { token } = response;
+
+    // Decode JWT (optional) or fetch user profile with token
+    const userPayload = JSON.parse(atob(token.split('.')[1]));
+
+    // Save to localStorage
     if (process.client) {
-      localStorage.setItem('user', JSON.stringify({ name: user.name, role: user.role, loggedIn: true }));
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({ email: userPayload.email, role: userPayload.role }));
     }
+
     alert('เข้าสู่ระบบสำเร็จ');
-    if (user.role === 'admin') {
+    if (userPayload.role === 'admin') {
       router.push('/admin');
     } else {
       router.push('/');
     }
-  } else {
+  } catch (error) {
+    console.error('Login failed:', error);
     alert('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
   }
 };
 </script>
+
 
 <template>
   <div class="min-h-screen bg-amber-50 flex items-center justify-center p-4">

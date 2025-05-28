@@ -3,17 +3,17 @@
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
-   devServer: {
-    port: 3001 
+  devServer: {
+    port: 3001
   },
-  
+  plugins: ['~/plugins/eventBus.js'],
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/ui','@nuxt/ui-pro','@pinia/nuxt'],
+  modules: ['@nuxt/ui', '@nuxt/ui-pro', '@pinia/nuxt'],
   css: ['~/assets/css/main.css'],
   vite: {
-   plugins: [
-     tailwindcss(),
-   ],
- },
+    plugins: [
+      tailwindcss(),
+    ],
+  },
 })

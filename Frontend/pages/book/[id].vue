@@ -53,10 +53,27 @@
         <div class="flex items-center gap-6 mt-6">
           <p class="text-2xl font-bold text-red-600">{{ book.price }} ฿</p>
           <button
-            @click="addToCart(book)"
-            class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-semibold shadow flex items-center"
+            @click="addToCart"
+            class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-semibold shadow flex items-center cursor-pointer transition-colors duration-300 relative"
+            :class="{ 'bg-green-500 hover:bg-green-600': isAdded }"
           >
-            🛒 เพิ่มใส่ตะกร้า
+            <span v-if="!isAdded">🛒 ใส่ตะกร้า</span>
+            <span v-else class="flex items-center">
+              🛒 เพิ่มแล้ว
+              <svg
+                class="w-4 h-4 ml-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </span>
           </button>
         </div>
       </div>
@@ -69,11 +86,16 @@
 </template>
 
 <script setup>
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router'; 
+import { useNuxtApp } from 'nuxt/app'; 
 
 const route = useRoute();
 const router = useRouter();
+const { $event } = useNuxtApp();
 const bookId = parseInt(route.params.id);
+
+// สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
+const isAdded = ref(false);
 
 const books = [
   {
@@ -268,7 +290,15 @@ const addToCart = () => {
       cart.push({ ...book, quantity: 1 });
     }
     localStorage.setItem('cart', JSON.stringify(cart));
-    alert(`${book.title} ถูกเพิ่มลงตะกร้าแล้ว!`);
+
+    // อัปเดตสถานะว่าเพิ่มแล้ว
+    isAdded.value = true;
+    setTimeout(() => {
+      isAdded.value = false;
+    }, 500); 
+
+    // ส่ง event เพื่ออัปเดตตะกร้าใน Navbar
+    $event.emit('cart-updated');
   }
 };
 </script>

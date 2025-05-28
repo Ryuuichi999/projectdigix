@@ -25,11 +25,28 @@
           <!-- ปุ่มใส่ตะกร้า -->
           <button
             @click.prevent="addToCart(book)"
-            class="flex items-center gap-1 cursor-pointer bg-amber-400 hover:bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded transition"
+            class="flex items-center gap-1 cursor-pointer bg-amber-400 hover:bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded transition relative"
+            :class="{ 'bg-green-500 hover:bg-green-600': addedBooks[book.id] }"
           >
             <!-- รูปไอคอนตะกร้า -->
             <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-6 h-6" />
-            ใส่ตะกร้า
+            <span v-if="!addedBooks[book.id]">ใส่ตะกร้า</span>
+            <span v-else class="flex items-center">
+              เพิ่มแล้ว
+              <svg
+                class="w-4 h-4 ml-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </span>
           </button>
         </div>
       </nuxt-link>
@@ -38,9 +55,14 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'; 
+import { useNuxtApp } from 'nuxt/app'; 
 
 const router = useRouter();
+const { $event } = useNuxtApp();
+
+// สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
+const addedBooks = ref({});
 
 const books = [
   {
@@ -233,7 +255,15 @@ const addToCart = (book) => {
       cart.push({ ...book, quantity: 1 });
     }
     localStorage.setItem('cart', JSON.stringify(cart));
-    alert(`${book.title} ถูกเพิ่มลงตะกร้าแล้ว!`);
+
+    // อัปเดตสถานะว่าเพิ่มแล้ว
+    addedBooks.value[book.id] = true;
+    setTimeout(() => {
+      addedBooks.value[book.id] = false;
+    }, 500); 
+
+    // ส่ง event เพื่ออัปเดตตะกร้าใน Navbar
+    $event.emit('cart-updated');
   }
 };
 </script>
