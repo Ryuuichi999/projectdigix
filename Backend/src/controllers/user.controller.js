@@ -70,30 +70,97 @@ const getUserById = {
 
 // Create user
 const createUser = {
-  description: "Create new user",
+  description: "Create user",
   tags: ["api", "user"],
   auth: false,
-  validate: {
-    payload: validateZod(createUserSchema),
-  },
   handler: async (request, h) => {
-    try {
-      const hashedPassword = await bcrypt.hash(request.payload.password, 10);
+    const { username, email, password, confirmPassword, role } = request.payload;
 
-      // สร้าง user โดยแทนที่ password ด้วย hashedPassword
+    try {
+      // Check if password and confirmPassword match
+      if (password !== confirmPassword) {
+        return h.response({ message: "Passwords do not match" }).code(400);
+      }
+
+      // Check for duplicate email
+      const existingEmail = await prisma.user.findUnique({ where: { email } });
+      if (existingEmail) {
+        return h.response({ message: "Email already exists" }).code(400);
+      }
+
+      // Check for duplicate username
+      const existingUsername = await prisma.user.findUnique({
+        where: { username },
+      });
+      if (existingUsername) {
+        return h.response({ message: "Username already exists" }).code(400);
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      const roleToSave = role || "user";
+
       const newUser = await prisma.user.create({
         data: {
-          ...request.payload,
+          username,
+          email,
           password: hashedPassword,
+          role: roleToSave,
         },
       });
 
-      const { password, ...userWithoutPassword } = newUser;
-
-      return h.response(userWithoutPassword).code(201);
+      // Hide password in response
+      const { password: _, ...userWithoutPassword } = newUser;
+      return h
+        .response({
+          message: "User registered successfully",
+          user: userWithoutPassword,
+        })
+        .code(201);
     } catch (error) {
-      console.error("Error creating user:", error);
-      return h.response({ message: "Failed to create user" }).code(500);
+      console.error("Error during registration:", error);
+      return h.response({ message: "Internal server error" }).code(500);
+    }
+  },
+};
+
+// Login user
+const login = {
+  description: "Login user",
+  tags: ["api", "user"],
+  auth: false,
+  handler: async (request, h) => {
+    try {
+      const { email, password } = request.payload;
+      console.log("Login payload:", request.payload);
+
+      if (!email || !password) {
+        return h.response({ message: "Email and password are required" }).code(400);
+      }
+
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        return h.response({ message: "Invalid credentials" }).code(401);
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return h.response({ message: "Invalid credentials" }).code(401);
+      }
+
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role || "user" },
+        JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+      console.log("Generated token:", token);
+
+      return h.response({ token }).code(200);
+    } catch (error) {
+      console.error("Login error:", error);
+      return h.response({ message: "Internal server error" }).code(500);
     }
   },
 };
@@ -166,6 +233,7 @@ module.exports = {
   getAllUsers,
   getUserById,
   createUser,
+  login,
   updateUser,
   deleteUser,
 };

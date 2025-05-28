@@ -8,26 +8,33 @@ const registeruser = {
   tags: ["api", "registeruser"],
   auth: false,
   handler: async (request, h) => {
-    const { username, email, password, role } = request.payload;
+    const { username, email, password, confirmPassword, role } = request.payload;
 
     try {
+      // Check if password and confirmPassword match
+      if (password !== confirmPassword) {
+        return h.response({ message: "Passwords do not match" }).code(400);
+      }
+
       // Check for duplicate email
       const existingEmail = await prisma.user.findUnique({ where: { email } });
-      if (existingEmail)
+      if (existingEmail) {
         return h.response({ message: "Email already exists" }).code(400);
+      }
 
       // Check for duplicate username
       const existingUsername = await prisma.user.findUnique({
         where: { username },
       });
-      if (existingUsername)
+      if (existingUsername) {
         return h.response({ message: "Username already exists" }).code(400);
+      }
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Create user
-      const roleToSave = role || "user"; 
+      const roleToSave = role || "user";
 
       const newUser = await prisma.user.create({
         data: {
