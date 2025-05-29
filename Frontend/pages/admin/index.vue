@@ -2,32 +2,37 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
-const activeTab = ref('users'); 
+const activeTab = ref('users');
 const users = ref([]);
 const books = ref([]);
 const router = useRouter();
 
-
-
-// ดึงข้อมูลจาก localStorage
-onMounted(() => {
+// ดึงข้อมูลจาก API และ localStorage
+onMounted(async () => {
   if (process.client) {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (!user.loggedIn || user.role !== 'admin') {
       router.push('/auth/login');
+      return;
     }
 
-    const storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
-    if (storedUsers.length === 0) {
-      users.value = [
-        { id: 1, email: 'user1@example.com', name: 'สมชาย', password: 'password123' },
-        { id: 2, email: 'user2@example.com', name: 'สมหญิง', password: 'password456' },
-      ];
-      localStorage.setItem('users', JSON.stringify(users.value));
-    } else {
-      users.value = storedUsers;
+    // ดึงข้อมูลผู้ใช้จาก API
+    try {
+      const response = await $fetch('http://localhost:3000/users', {
+        method: 'GET',
+      });
+      users.value = response.map(user => ({
+        id: user.id,
+        name: user.username,
+        email: user.email,
+        role: user.role, 
+      }));
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      users.value = [];
     }
 
+    // ยังคงใช้ localStorage สำหรับ books เนื่องจากยังไม่มี API สำหรับ books
     const storedBooks = JSON.parse(localStorage.getItem('books') || '[]');
     if (storedBooks.length === 0) {
       books.value = [
@@ -48,18 +53,27 @@ onMounted(() => {
     } else {
       books.value = storedBooks.map(book => ({
         ...book,
-        description: book.description ?? '', // ตรวจสอบและกำหนดค่าเริ่มต้นถ้า description เป็น undefined
+        description: book.description ?? '',
       }));
     }
   }
 });
 
-// ฟังก์ชันลบ
-const deleteUser = (id) => {
-  users.value = users.value.filter((user) => user.id !== id);
-  localStorage.setItem('users', JSON.stringify(users.value));
+// ฟังก์ชันลบผู้ใช้โดยเรียก API
+const deleteUser = async (id) => {
+  try {
+    await $fetch(`http://localhost:3000/users/${id}`, {
+      method: 'DELETE',
+    });
+    users.value = users.value.filter((user) => user.id !== id);
+    alert('ลบผู้ใช้สำเร็จ');
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    alert('เกิดข้อผิดพลาดในการลบผู้ใช้: ' + (error.message || 'Unknown error'));
+  }
 };
 
+// ฟังก์ชันลบหนังสือ (ยังใช้ localStorage)
 const deleteBook = (id) => {
   books.value = books.value.filter((book) => book.id !== id);
   localStorage.setItem('books', JSON.stringify(books.value));
@@ -67,7 +81,7 @@ const deleteBook = (id) => {
 
 // จำกัดข้อความ description
 const truncateDescription = (text, maxLength = 40) => {
-  if (!text) return ''; // ตรวจสอบถ้า text เป็น undefined หรือ null
+  if (!text) return '';
   if (text.length > maxLength) {
     return text.substring(0, maxLength) + '...';
   }
@@ -114,9 +128,10 @@ const truncateDescription = (text, maxLength = 40) => {
             <thead>
               <tr class="bg-amber-200">
                 <th class="px-4 py-2 text-left">ID</th>
-                <th class="px-4 py-2 text-left">ชื่อ</th>
-                <th class="px-4 py-2 text-left">อีเมล</th>
-                <th class="px-4 py-2 text-right">การจัดการ</th>
+                <th class="px-4 py-2 text-left">Username</th>
+                <th class="px-4 py-2 text-left">Email</th>
+                <th class="px-4 py-2 text-left">Role</th> 
+                <th class="px-4 py-2 text-right">Management</th>
               </tr>
             </thead>
             <tbody>
@@ -124,6 +139,7 @@ const truncateDescription = (text, maxLength = 40) => {
                 <td class="px-4 py-2">{{ user.id }}</td>
                 <td class="px-4 py-2">{{ user.name }}</td>
                 <td class="px-4 py-2">{{ user.email }}</td>
+                <td class="px-4 py-2">{{ user.role }}</td> 
                 <td class="px-4 py-2 text-right space-x-2">
                   <nuxt-link
                     :to="`/admin/users/${user.id}`"

@@ -22,7 +22,7 @@ const handleRegister = async () => {
   }
 
   try {
-    const response = await $fetch('http://localhost:3000/users', {
+    const response = await $fetch('http://localhost:3000/registeruser', {
       method: 'POST',
       body: {
         username: username.value,

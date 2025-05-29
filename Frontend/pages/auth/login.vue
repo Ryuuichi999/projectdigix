@@ -33,7 +33,7 @@ const handleLogin = async () => {
     if (process.client) {
       const userData = {
         loggedIn: true,
-        name: userPayload.email.split('@')[0], // ใช้ email เป็น name ชั่วคราว
+        name: userPayload.email.split('@')[0], 
         role: userPayload.role || 'user',
         id: userPayload.id,
       };
