@@ -1,24 +1,48 @@
 const bcrypt = require("bcrypt");
-const { signToken } = require("../utils/jwt");
-const userService = require("../services/user.service");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+const jwt = require("jsonwebtoken"); 
+require("dotenv").config(); 
 
+
+const JWT_SECRET = process.env.JWT_SECRET; 
 const login = {
-  description: "login user",
-  tags: ["api", "loginuser"],
+  description: "Login user",
+  tags: ["api", "user"],
   auth: false,
   handler: async (request, h) => {
-    const { email, password } = request.payload;
+    try {
+      const { email, password } = request.payload;
+      console.log("Login payload:", request.payload);
 
-    const user = await userService.getUserByEmail(email);
-    if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
-      return h.response({ message: "Invalid credentials" }).code(401);
+      if (!email || !password) {
+        return h.response({ message: "Email and password are required" }).code(400);
+      }
+
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        return h.response({ message: "Invalid credentials" }).code(401);
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return h.response({ message: "Invalid credentials" }).code(401);
+      }
+
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role || "user" },
+        JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+      console.log("Generated token:", token);
+
+      return h.response({ token }).code(200);
+    } catch (error) {
+      console.error("Login error:", error);
+      return h.response({ message: "Internal server error" }).code(500);
     }
-
-    const token = signToken({ id: user.id, email: user.email, role: user.role });
-    return h.response({ token }).code(200);
   },
 };
-
 module.exports = {
   login,
 };

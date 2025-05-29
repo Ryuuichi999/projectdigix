@@ -27,9 +27,5 @@ module.exports = [
     path: '/users',
     options: userController.getAllUsers
   },
-   {
-    method: "POST",
-    path: "/login",
-    options: userController.login,
-  },
+  
 ];

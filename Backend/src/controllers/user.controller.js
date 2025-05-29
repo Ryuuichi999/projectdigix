@@ -32,7 +32,7 @@ const getAllUsers = {
   auth: false,
   handler: async (request, h) => {
     try {
-      const users = await prisma.User.findMany();
+      const users = await prisma.user.findMany();
       return h.response(users).code(200);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -60,7 +60,9 @@ const getUserById = {
         return h.response({ message: "User not found" }).code(404);
       }
 
-      return h.response(user).code(200);
+      // Hide password in response
+      const { password, ...userWithoutPassword } = user;
+      return h.response(userWithoutPassword).code(200);
     } catch (error) {
       console.error("Error fetching user:", error);
       return h.response({ message: "Failed to fetch user" }).code(500);
@@ -126,45 +128,6 @@ const createUser = {
   },
 };
 
-// Login user
-const login = {
-  description: "Login user",
-  tags: ["api", "user"],
-  auth: false,
-  handler: async (request, h) => {
-    try {
-      const { email, password } = request.payload;
-      console.log("Login payload:", request.payload);
-
-      if (!email || !password) {
-        return h.response({ message: "Email and password are required" }).code(400);
-      }
-
-      const user = await prisma.user.findUnique({ where: { email } });
-      if (!user) {
-        return h.response({ message: "Invalid credentials" }).code(401);
-      }
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-        return h.response({ message: "Invalid credentials" }).code(401);
-      }
-
-      const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role || "user" },
-        JWT_SECRET,
-        { expiresIn: "1h" }
-      );
-      console.log("Generated token:", token);
-
-      return h.response({ token }).code(200);
-    } catch (error) {
-      console.error("Login error:", error);
-      return h.response({ message: "Internal server error" }).code(500);
-    }
-  },
-};
-
 // Update user
 const updateUser = {
   description: "Update user by ID",
@@ -176,12 +139,13 @@ const updateUser = {
   },
   handler: async (request, h) => {
     const { id } = request.params;
-    const data = { ...request.payload };
+    const { username, email, password, role } = request.payload;
 
     try {
-      if (data.password) {
+      const data = { username, email, role };
+      if (password) {
         const saltRounds = 10;
-        data.password = await bcrypt.hash(data.password, saltRounds);
+        data.password = await bcrypt.hash(password, saltRounds);
       }
 
       const updatedUser = await prisma.user.update({
@@ -189,7 +153,7 @@ const updateUser = {
         data,
       });
 
-      const { password, ...userWithoutPassword } = updatedUser;
+      const { password: _, ...userWithoutPassword } = updatedUser;
       return h.response(userWithoutPassword).code(200);
     } catch (error) {
       console.error("Error updating user:", error);
@@ -233,7 +197,6 @@ module.exports = {
   getAllUsers,
   getUserById,
   createUser,
-  login,
   updateUser,
   deleteUser,
 };

@@ -12,7 +12,7 @@ model User {
   username   String   @unique
   email      String   @unique
   password   String
-  role       String  
+  role       String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -20,13 +20,16 @@ model User {
 }
 
 model Book {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
   author      String
   price       Float
-  description String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  description String?
+  image       String?
+  isbn        String?
+  published   DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 
   orderDetails OrderDetail[]
   stock        Stock?
@@ -60,15 +63,15 @@ model OrderDetail {
 model Stock {
   id       Int @id @default(autoincrement())
   book_id  Int @unique
-  quantity Int
+  quantity Int @default(0)
 
-  book Book @relation(fields: [book_id], references: [id])
+  book Book @relation(fields: [book_id], references: [id], onDelete: Cascade)
 }
 
 model Category {
-  id            Int    @id @default(autoincrement())
+  id            Int     @id @default(autoincrement())
   category_name String
-  description   String
+  description   String?
 
   bookCategories BookCategory[]
 }
@@ -77,8 +80,8 @@ model BookCategory {
   book_id     Int
   category_id Int
 
-  book     Book     @relation(fields: [book_id], references: [id])
-  category Category @relation(fields: [category_id], references: [id])
+  book     Book     @relation(fields: [book_id], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [category_id], references: [id], onDelete: Cascade)
 
   @@id([book_id, category_id])
 }
@@ -90,5 +93,5 @@ model Receipt {
   total_amount   Float
   issued_at      DateTime
 
-  order Order @relation(fields: [order_id], references: [id])
+  order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
 }

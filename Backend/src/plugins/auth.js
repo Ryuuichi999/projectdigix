@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const Boom = require('@hapi/boom');
 
-const SECRET =  process.env.SECRET_KEY;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.authPlugin = {
   name: 'authPlugin',
@@ -12,12 +12,11 @@ exports.authPlugin = {
         authenticate: async (request, h) => {
           const authHeader = request.headers.authorization;
           if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            throw Boom.unauthorized('Missing or invalid token 2');
+            throw Boom.unauthorized('Missing or invalid token');
           }
-
           const token = authHeader.replace('Bearer ', '');
           try {
-            const decoded = jwt.verify(token, SECRET);
+            const decoded = jwt.verify(token, JWT_SECRET);
             return h.authenticated({ credentials: decoded });
           } catch (err) {
             console.error('Token verification failed:', err);
@@ -26,8 +25,7 @@ exports.authPlugin = {
         }
       };
     });
-
     server.auth.strategy('jwt', 'jwt-scheme');
-    server.auth.default('jwt'); // Optional: require auth by default
+  
   }
 };

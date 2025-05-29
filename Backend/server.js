@@ -11,12 +11,12 @@ const init = async () => {
     host: "0.0.0.0",
     routes: {
       cors: {
-        origin: ['*'],// ✅ อนุญาตเฉพาะ Nuxt frontend
+        origin: ['*'],
         credentials: true,
       },
       validate: {
         failAction: async (request, h, err) => {
-          throw err; // Show detailed validation errors during development
+          throw err; 
         },
       },
     },
