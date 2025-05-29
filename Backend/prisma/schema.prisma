@@ -27,6 +27,7 @@ model Book {
   description String?
   image       String?
   isbn        String?
+  publisher   String?
   published   DateTime?
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
@@ -69,9 +70,8 @@ model Stock {
 }
 
 model Category {
-  id            Int     @id @default(autoincrement())
-  category_name String
-  description   String?
+  id            Int    @id @default(autoincrement())
+  category_name String @unique
 
   bookCategories BookCategory[]
 }

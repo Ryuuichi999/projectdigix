@@ -1,4 +1,8 @@
-// controller/book.controller.js
+const {
+  createBookSchema,
+  updateBookSchema,
+} = require("../validations/book.validation");
+
 const { z } = require("zod");
 const prisma = require("../utils/prisma");
 
@@ -10,33 +14,11 @@ const validateZod = (schema) => async (value, options) => {
   try {
     await schema.parseAsync(value);
   } catch (err) {
-    throw new Error(`Validation error: ${err.errors.map((e) => e.message).join(", ")}`);
+    throw new Error(
+      `Validation error: ${err.errors.map((e) => e.message).join(", ")}`
+    );
   }
 };
-
-const createBookSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  author: z.string().min(1, "Author is required"),
-  price: z.number().min(0, "Price must be a positive number"),
-  image: z.string().optional(),
-  discount: z.number().min(0).max(100).optional(),
-  isbn: z.string().optional(),
-  published: z.string().optional(),
-  description: z.string().optional(),
-  categoryIds: z.array(z.number()).optional(),
-});
-
-const updateBookSchema = z.object({
-  title: z.string().min(1, "Title is required").optional(),
-  author: z.string().min(1, "Author is required").optional(),
-  price: z.number().min(0, "Price must be a positive number").optional(),
-  image: z.string().optional(),
-  discount: z.number().min(0).max(100).optional(),
-  isbn: z.string().optional(),
-  published: z.string().optional(),
-  description: z.string().optional(),
-  categoryIds: z.array(z.number()).optional(),
-});
 
 const getAllBooks = {
   description: "Get list of all books",
@@ -76,26 +58,79 @@ const getBookById = {
   },
 };
 
+
 const createBook = {
   description: "Create book",
   tags: ["api", "book"],
   auth: false,
   validate: { payload: validateZod(createBookSchema) },
   handler: async (request, h) => {
-    const { title, author, price, image, discount, isbn, published, description, categoryIds } = request.payload;
+    const {
+      title,
+      author,
+      price,
+      image,
+      isbn,
+      published,
+      description,
+      categoryIds,
+      initialQuantity, 
+      publisher, 
+    } = request.payload;
+
     try {
+      // ตรวจสอบว่าหนังสือนี้มีอยู่แล้วหรือไม่ (ตาม book_id จะไม่ซ้ำ แต่เพื่อความปลอดภัย)
+      const existingBook = await prisma.book.findFirst({
+        where: { title, author }, 
+      });
+      if (existingBook) {
+        return h
+          .response({ message: "Book with this title and author already exists" })
+          .code(400);
+      }
+
+      // สร้างหนังสือใหม่
       const newBook = await prisma.book.create({
         data: {
-          title, author, price, image, discount, isbn, published: published ? new Date(published) : null, description,
+          title,
+          author,
+          price,
+          image,
+          isbn,
+          published: published ? new Date(published) : null,
+          description,
+          publisher,
         },
       });
+
+      // สร้างหรืออัปเดตสต็อก
+      const stock = await prisma.stock.upsert({
+        where: { book_id: newBook.id },
+        create: {
+          book_id: newBook.id,
+          quantity: initialQuantity || 0, 
+        },
+        update: {
+          quantity: initialQuantity || 0, 
+        },
+      });
+
+      // เพิ่มความสัมพันธ์กับหมวดหมู่
       if (categoryIds) {
         await prisma.bookCategory.createMany({
-          data: categoryIds.map(categoryId => ({ book_id: newBook.id, category_id: categoryId })),
+          data: categoryIds.map((categoryId) => ({
+            book_id: newBook.id,
+            category_id: categoryId,
+          })),
         });
       }
-      const stock = await prisma.stock.create({ data: { book_id: newBook.id, quantity: 0 } });
-      return h.response({ message: "Book created", book: { ...newBook, stock: stock.quantity } }).code(201);
+
+      return h
+        .response({
+          message: "Book created",
+          book: { ...newBook, stock: stock.quantity },
+        })
+        .code(201);
     } catch (error) {
       console.error("Error creating book:", error);
       return h.response({ message: "Internal server error" }).code(500);
@@ -107,24 +142,53 @@ const updateBook = {
   description: "Update book by ID",
   tags: ["api", "book"],
   auth: false,
-  validate: { params: validateZod(idParamSchema), payload: validateZod(updateBookSchema) },
+  validate: {
+    params: validateZod(idParamSchema),
+    payload: validateZod(updateBookSchema),
+  },
   handler: async (request, h) => {
     const { id } = request.params;
-    const { title, author, price, image, discount, isbn, published, description, categoryIds } = request.payload;
+    const {
+      title,
+      author,
+      price,
+      image,
+      isbn,
+      published,
+      description,
+      categoryIds,
+      publisher,
+    } = request.payload;
     try {
       const book = await prisma.book.findUnique({ where: { id: Number(id) } });
       if (!book) return h.response({ message: "Book not found" }).code(404);
       const updatedBook = await prisma.book.update({
         where: { id: Number(id) },
-        data: { title, author, price, image, discount, isbn, published: published ? new Date(published) : null, description },
+        data: {
+          title,
+          author,
+          price,
+          image,
+          isbn,
+          published: published ? new Date(published) : null,
+          description,
+          publisher,
+        },
       });
       if (categoryIds) {
-        await prisma.bookCategory.deleteMany({ where: { book_id: Number(id) } });
+        await prisma.bookCategory.deleteMany({
+          where: { book_id: Number(id) },
+        });
         await prisma.bookCategory.createMany({
-          data: categoryIds.map(categoryId => ({ book_id: Number(id), category_id: categoryId })),
+          data: categoryIds.map((categoryId) => ({
+            book_id: Number(id),
+            category_id: categoryId,
+          })),
         });
       }
-      return h.response({ message: "Book updated", book: updatedBook }).code(200);
+      return h
+        .response({ message: "Book updated", book: updatedBook })
+        .code(200);
     } catch (error) {
       console.error("Error updating book:", error);
       return h.response({ message: "Failed to update book" }).code(500);
@@ -151,44 +215,11 @@ const deleteBook = {
   },
 };
 
-const getAllCategories = {
-  description: "Get all categories",
-  tags: ["api", "category"],
-  auth: false,
-  handler: async (request, h) => {
-    try {
-      const categories = await prisma.category.findMany();
-      return h.response(categories).code(200);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      return h.response({ message: "Failed to fetch categories" }).code(500);
-    }
-  },
-};
 
-const createOrder = {
-  description: "Create order",
-  tags: ["api", "order"],
-  auth: true,
-  handler: async (request, h) => {
-    const { user_id, total_price, status, orderDetails } = request.payload;
-    try {
-      const order = await prisma.order.create({
-        data: {
-          user_id,
-          total_price,
-          status,
-          orderDetails: {
-            createMany: { data: orderDetails.map(d => ({ book_id: d.book_id, quantity: d.quantity, price: d.price })) },
-          },
-        },
-      });
-      return h.response({ message: "Order created", order }).code(201);
-    } catch (error) {
-      console.error("Error creating order:", error);
-      return h.response({ message: "Failed to create order" }).code(500);
-    }
-  },
+module.exports = {
+  getAllBooks,
+  getBookById,
+  createBook,
+  updateBook,
+  deleteBook,
 };
-
-module.exports = { getAllBooks, getBookById, createBook, updateBook, deleteBook, getAllCategories, createOrder };
