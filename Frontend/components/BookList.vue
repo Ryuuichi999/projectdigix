@@ -9,10 +9,11 @@
         v-for="book in books"
         :key="book.id"
         :to="`/book/${book.id}`"
-        class="bg-white p-4 rounded shadow hover:bg-gray-50 transition block"
+        :id="book.id ? `book-${book.id}` : `book-unknown`" 
+        class="bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-200 hover:border-amber-300 group"
       >
         <img
-          :src="book.image"
+          :src="book.image || '/images/default-book.jpg'" 
           alt="Book"
           class="w-full aspect-[3/4] object-cover rounded"
         />
@@ -20,7 +21,7 @@
 
         <!-- ราคา + ปุ่ม -->
         <div class="flex items-center justify-between mt-2">
-          <p class="text-red-600 font-bold text-sm">{{ book.price }}฿</p>
+          <p class="text-red-600 font-bold text-sm">{{ book.price || 0 }}฿</p>
 
           <!-- ปุ่มใส่ตะกร้า -->
           <button
@@ -50,6 +51,9 @@
           </button>
         </div>
       </nuxt-link>
+      <div v-if="books.length === 0" class="col-span-full text-center text-gray-500">
+        ไม่พบหนังสือ
+      </div>
     </div>
   </section>
 </template>
@@ -71,14 +75,13 @@ const books = ref([]);
 const fetchBooks = async () => {
   try {
     const response = await $fetch('http://localhost:3000/books');
-    // ปรับโครงสร้างข้อมูลให้สอดคล้องกับ frontend
     books.value = response.map(book => ({
       ...book,
-      category: book.categories?.[0]?.category?.category_name || 'ไม่ระบุ', 
+      category: book.categories?.[0]?.category?.category_name || 'ไม่ระบุ',
     }));
   } catch (error) {
     console.error('Error fetching books:', error);
-    books.value = []; 
+    books.value = [];
   }
 };
 
@@ -116,3 +119,4 @@ const addToCart = (book) => {
   }
 };
 </script>
+

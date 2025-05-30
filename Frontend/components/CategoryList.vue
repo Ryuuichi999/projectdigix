@@ -6,7 +6,7 @@
         v-for="category in categories"
         :key="category.id"
         :to="`/category/${category.id}`"
-        class="flex items-center justify-between bg-white rounded shadow p-4 cursor-pointer hover:bg-gray-50 transition w-1/4"
+        class="flex items-center justify-between bg-white rounded shadow p-4 cursor-pointer hover:bg-gray-50 transition w-1/4 duration-300 transform hover:scale-105"
       >
         <span
           :class="{
@@ -14,7 +14,7 @@
             'text-gray-800': $route.path !== `/category/${category.id}` 
           }"
         >
-          {{ category.category_name }} <!-- ใช้ category_name แทน name -->
+          {{ category.category_name }} 
         </span>
         <Icon name="mdi:chevron-right" class="text-gray-500" />
       </nuxt-link>

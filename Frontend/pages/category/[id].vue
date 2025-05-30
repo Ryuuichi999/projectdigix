@@ -1,7 +1,7 @@
 <template>
   <div class="bg-amber-50 min-h-screen">
   <section class="py-8 max-w-5xl mx-auto">
-    <NuxtLink to="/" class="text-sm text-blue-500 hover:underline mb-4 block">
+    <NuxtLink to="/" class="text-sm text-blue-500 hover:underline mb-4 block  ">
       ← ย้อนกลับ
     </NuxtLink>
     <h2 class="text-xl font-semibold mb-4">หมวดหมู่: {{ categoryName }}</h2>
@@ -13,7 +13,7 @@
         v-for="book in filteredBooks"
         :key="book.id"
         :to="`/book/${book.id}`"
-        class="bg-white p-4 rounded shadow hover:bg-gray-50 transition block"
+        class="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-200 hover:border-amber-300 group"
       >
         <img
           :src="book.image"

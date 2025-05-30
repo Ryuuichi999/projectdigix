@@ -25,7 +25,7 @@
       <!-- ช่องค้นหา -->
       <div
         v-if="userRole !== 'admin'"
-        class="flex items-center bg-white rounded-full px-4 py-2 max-w-xl shadow"
+        class="relative flex items-center bg-white rounded-full px-4 py-2 max-w-xl shadow"
       >
         <svg
           class="w-5 h-5 text-gray-500 mr-2"
@@ -38,10 +38,26 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <input
+          v-model="searchQuery"
           type="text"
           placeholder="ค้นหาหนังสือ"
           class="outline-none w-48 text-sm text-gray-700 bg-transparent focus:w-64 transition-all duration-300"
+          @input="filterBooks"
         />
+        <!-- Dropdown ผลลัพธ์การค้นหา -->
+        <div
+          v-if="filteredBooks.length > 0"
+          class="absolute top-full left-0 mt-2 w-full bg-white border rounded-lg shadow-lg z-20"
+        >
+          <div
+            v-for="book in filteredBooks"
+            :key="book.id"
+            @click="selectBook(book)"
+            class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-gray-700"
+          >
+            {{ book.title }} 
+          </div>
+        </div>
       </div>
 
       <!-- ไอคอนตะกร้า -->
@@ -100,10 +116,9 @@
         <!-- Dropdown เมนู -->
         <div
           v-if="isDropdownOpen"
-          class="absolute  -ml-15  mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
+          class="absolute -ml-15 mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
           ref="dropdown"
         >
-          
           <button
             @click="logout"
             class="w-full text-left px-4 py-2 hover:bg-amber-200 rounded-lg transition duration-200 flex items-center cursor-pointer"
@@ -130,7 +145,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
 
@@ -140,15 +155,63 @@ const { $event } = useNuxtApp();
 // เก็บข้อมูลผู้ใช้และตะกร้า
 const user = ref(null);
 const cart = ref([]);
+const books = ref([]);
+const searchQuery = ref(''); 
+const filteredBooks = ref([]);
 const isDropdownOpen = ref(false);
 const userIcon = ref(null);
 const dropdown = ref(null);
+
+// ดึงข้อมูลหนังสือทั้งหมดเมื่อโหลดหน้า
+const fetchBooks = async () => {
+  try {
+    const response = await $fetch('http://localhost:3000/books');
+    books.value = response.map(book => ({
+      id: book.id,
+      title: book.title,
+      category: book.categories?.[0]?.category?.category_name || 'ไม่ระบุ',
+    }));
+  } catch (error) {
+    console.error('Error fetching books:', error);
+    books.value = [];
+  }
+};
+
+// กรองข้อมูลหนังสือเมื่อ searchQuery เปลี่ยน
+const filterBooks = () => {
+  if (!searchQuery.value.trim()) {
+    filteredBooks.value = [];
+    return;
+  }
+  filteredBooks.value = books.value.filter(book =>
+    book.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    book.category.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+};
+
+// เลือกหนังสือและเลื่อนไปยังตำแหน่ง
+const selectBook = (book) => {
+  searchQuery.value = book.title; 
+  filteredBooks.value = []; 
+  scrollToBook(book.id); 
+};
+
+// เลื่อนไปยังหนังสือใน booklist
+const scrollToBook = (bookId) => {
+  const bookElement = document.querySelector(`#book-${bookId}`);
+  if (bookElement) {
+    bookElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+};
 
 onMounted(() => {
   if (process.client) {
     const storedUser = localStorage.getItem("user");
     user.value = storedUser ? JSON.parse(storedUser) : { loggedIn: false, name: "", role: "" };
     cart.value = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    // ดึงข้อมูลหนังสือ
+    fetchBooks();
 
     // ฟัง event เพื่ออัปเดตตะกร้า
     $event.on("cart-updated", () => {
@@ -217,11 +280,6 @@ const logout = () => {
   isDropdownOpen.value = false;
   router.push("/");
   alert("ออกจากระบบเรียบร้อยแล้ว");
-};
-
-const goToAdminPanel = () => {
-  router.push("/admin");
-  isDropdownOpen.value = false;
 };
 </script>
 
