@@ -79,7 +79,6 @@ const createBook = {
     } = request.payload;
 
     try {
-      // ตรวจสอบว่าหนังสือนี้มีอยู่แล้วหรือไม่ (ตาม book_id จะไม่ซ้ำ แต่เพื่อความปลอดภัย)
       const existingBook = await prisma.book.findFirst({
         where: { title, author }, 
       });
