@@ -9,11 +9,11 @@
         v-for="book in books"
         :key="book.id"
         :to="`/book/${book.id}`"
-        :id="book.id ? `book-${book.id}` : `book-unknown`" 
+        :id="book.id ? `book-${book.id}` : `book-unknown`"
         class="bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-200 hover:border-amber-300 group"
       >
         <img
-          :src="book.image || '/images/default-book.jpg'" 
+          :src="book.image "
           alt="Book"
           class="w-full aspect-[3/4] object-cover rounded"
         />
@@ -59,11 +59,26 @@
 </template>
 
 <script setup>
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNuxtApp } from 'nuxt/app';
+import Swal from 'sweetalert2';
 
 const router = useRouter();
 const { $event } = useNuxtApp();
+
+// กำหนดค่า Toast
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  }
+});
 
 // สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
 const addedBooks = ref({});
@@ -76,7 +91,11 @@ const fetchBooks = async () => {
   try {
     const response = await $fetch('http://localhost:3000/books');
     books.value = response.map(book => ({
-      ...book,
+      id: book.id,
+      title: book.title,
+      price: book.price,
+      image: book.image || '/images/default-book.jpg',
+      stock: book.stock?.quantity ?? 0,
       category: book.categories?.[0]?.category?.category_name || 'ไม่ระบุ',
     }));
   } catch (error) {
@@ -94,29 +113,67 @@ const addToCart = (book) => {
   if (process.client) {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (!user.loggedIn) {
-      alert('กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า');
-      router.push('/');
+      Swal.fire({
+        icon: "warning",
+        title: "กรุณาเข้าสู่ระบบ",
+        text: "คุณต้องล็อกอินก่อนเพิ่มสินค้าลงตะกร้า",
+        confirmButtonColor: "#f59e0b"
+      });
+      router.push('/auth/login');
       return;
     }
 
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const existingItem = cart.find(item => item.id === book.id);
+
     if (existingItem) {
+      // ตรวจสอบสต็อกก่อนเพิ่มจำนวน
+      if (existingItem.quantity >= book.stock) {
+        Swal.fire({
+          icon: "warning",
+          title: "สินค้าคงเหลือไม่เพียงพอ",
+          text: `คงเหลือ: ${book.stock} เล่ม`,
+          confirmButtonColor: "#f59e0b"
+        });
+        return;
+      }
       existingItem.quantity += 1;
     } else {
-      cart.push({ ...book, quantity: 1 });
+      // ตรวจสอบว่ามีสต็อกหรือไม่
+      if (book.stock <= 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "สินค้าหมด",
+          text: "ขออภัย สินค้าหมดสต็อก",
+          confirmButtonColor: "#f59e0b"
+        });
+        return;
+      }
+      cart.push({
+        id: book.id,
+        title: book.title,
+        price: book.price,
+        image: book.image,
+        stock: book.stock,
+        quantity: 1
+      });
     }
+
     localStorage.setItem('cart', JSON.stringify(cart));
 
     // อัปเดตสถานะว่าเพิ่มแล้ว
     addedBooks.value[book.id] = true;
     setTimeout(() => {
       addedBooks.value[book.id] = false;
-    }, 500);
+    }, 2000);
 
     // ส่ง event เพื่ออัปเดตตะกร้าใน Navbar
     $event.emit('cart-updated');
+
+    Toast.fire({
+      icon: "success",
+      title: "เพิ่มสินค้าในตะกร้าสำเร็จ"
+    });
   }
 };
 </script>
-

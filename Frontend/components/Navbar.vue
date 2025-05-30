@@ -148,7 +148,7 @@
 import { computed, onMounted, ref, watch, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
-import Swal from "sweetalert2"; 
+import Swal from "sweetalert2";
 
 const router = useRouter();
 const { $event } = useNuxtApp();
@@ -163,14 +163,14 @@ const Toast = Swal.mixin({
   didOpen: (toast) => {
     toast.onmouseenter = Swal.stopTimer;
     toast.onmouseleave = Swal.resumeTimer;
-  }
+  },
 });
 
 // เก็บข้อมูลผู้ใช้และตะกร้า
 const user = ref(null);
 const cart = ref([]);
 const books = ref([]);
-const searchQuery = ref(''); 
+const searchQuery = ref("");
 const filteredBooks = ref([]);
 const isDropdownOpen = ref(false);
 const userIcon = ref(null);
@@ -179,14 +179,14 @@ const dropdown = ref(null);
 // ดึงข้อมูลหนังสือทั้งหมดเมื่อโหลดหน้า
 const fetchBooks = async () => {
   try {
-    const response = await $fetch('http://localhost:3000/books');
-    books.value = response.map(book => ({
+    const response = await $fetch("http://localhost:3000/books");
+    books.value = response.map((book) => ({
       id: book.id,
       title: book.title,
-      category: book.categories?.[0]?.category?.category_name || 'ไม่ระบุ',
+      category: book.categories?.[0]?.category?.category_name || "ไม่ระบุ",
     }));
   } catch (error) {
-    console.error('Error fetching books:', error);
+    console.error("Error fetching books:", error);
     books.value = [];
   }
 };
@@ -197,31 +197,34 @@ const filterBooks = () => {
     filteredBooks.value = [];
     return;
   }
-  filteredBooks.value = books.value.filter(book =>
-    book.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    book.category.toLowerCase().includes(searchQuery.value.toLowerCase())
+  filteredBooks.value = books.value.filter(
+    (book) =>
+      book.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      book.category.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 };
 
 // เลือกหนังสือและเลื่อนไปยังตำแหน่ง
 const selectBook = (book) => {
-  searchQuery.value = book.title; 
-  filteredBooks.value = []; 
-  scrollToBook(book.id); 
+  searchQuery.value = book.title;
+  filteredBooks.value = [];
+  scrollToBook(book.id);
 };
 
 // เลื่อนไปยังหนังสือใน booklist
 const scrollToBook = (bookId) => {
   const bookElement = document.querySelector(`#book-${bookId}`);
   if (bookElement) {
-    bookElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    bookElement.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 };
 
 onMounted(() => {
   if (process.client) {
     const storedUser = localStorage.getItem("user");
-    user.value = storedUser ? JSON.parse(storedUser) : { loggedIn: false, name: "", role: "" };
+    user.value = storedUser
+      ? JSON.parse(storedUser)
+      : { loggedIn: false, name: "", role: "" };
     cart.value = JSON.parse(localStorage.getItem("cart") || "[]");
 
     // ดึงข้อมูลหนังสือ
@@ -237,11 +240,12 @@ onMounted(() => {
       const newUser = localStorage.getItem("user");
       if (newUser) {
         const parsedUser = JSON.parse(newUser);
-        if (user.value?.loggedIn !== parsedUser.loggedIn) { // ตรวจสอบการเปลี่ยนแปลงสถานะล็อกอิน
+        if (user.value?.loggedIn !== parsedUser.loggedIn) {
+          // ตรวจสอบการเปลี่ยนแปลงสถานะล็อกอิน
           if (parsedUser.loggedIn) {
             Toast.fire({
               icon: "success",
-              title: "ล็อกอินสำเร็จ"
+              title: "ล็อกอินสำเร็จ",
             });
           }
           user.value = parsedUser;
@@ -264,8 +268,8 @@ onMounted(() => {
     }
   };
   document.addEventListener("click", handleClickOutside);
-
-  // ทำความสะอาด event listener
+  
+  
   onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
     $event.off("cart-updated");
@@ -283,8 +287,17 @@ const toggleDropdown = () => {
 
 const handleCartClick = () => {
   if (!isLoggedIn.value) {
-    alert("กรุณาเข้าสู่ระบบก่อนใช้งานตะกร้า");
-    router.push("/auth/login");
+    Swal.fire({
+      icon: "warning",
+      title: "กรุณาเข้าสู่ระบบ",
+      text: "คุณต้องล็อกอินก่อนใช้งานตะกร้า",
+      confirmButtonColor: "#f59e0b", 
+      confirmButtonText: "ไปที่หน้าล็อกอิน",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        router.push("/auth/login");
+      }
+    });
   } else {
     router.push("/cart");
   }
@@ -301,7 +314,7 @@ const logout = () => {
   router.push("/");
   Toast.fire({
     icon: "success",
-    title: "ออกจากระบบสำเร็จ"
+    title: "ออกจากระบบสำเร็จ",
   });
 };
 </script>
