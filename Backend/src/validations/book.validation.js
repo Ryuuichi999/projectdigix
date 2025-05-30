@@ -25,6 +25,7 @@ const updateBookSchema = z.object({
   description: z.string().optional(),
   categoryIds: z.array(z.number()).optional(),
   publisher: z.string().optional(), 
+  quantity: z.number().int().min(0, "Quantity must be a non-negative integer").optional(),
 });
 
 module.exports = {

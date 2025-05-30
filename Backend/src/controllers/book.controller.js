@@ -158,10 +158,13 @@ const updateBook = {
       description,
       categoryIds,
       publisher,
+      quantity, 
     } = request.payload;
     try {
       const book = await prisma.book.findUnique({ where: { id: Number(id) } });
       if (!book) return h.response({ message: "Book not found" }).code(404);
+
+      // อัปเดตข้อมูลหนังสือ
       const updatedBook = await prisma.book.update({
         where: { id: Number(id) },
         data: {
@@ -174,7 +177,24 @@ const updateBook = {
           description,
           publisher,
         },
+        include: { stock: true }, 
       });
+
+      // อัปเดตสต็อก
+      if (quantity !== undefined) {
+        await prisma.stock.upsert({
+          where: { book_id: Number(id) },
+          update: {
+            quantity: Number(quantity),
+          },
+          create: {
+            book_id: Number(id),
+            quantity: Number(quantity),
+          },
+        });
+      }
+
+      // อัปเดตหมวดหมู่
       if (categoryIds) {
         await prisma.bookCategory.deleteMany({
           where: { book_id: Number(id) },
@@ -186,8 +206,20 @@ const updateBook = {
           })),
         });
       }
+
+      // ดึงข้อมูลสต็อกล่าสุดเพื่อส่งกลับ
+      const updatedStock = await prisma.stock.findUnique({
+        where: { book_id: Number(id) },
+      });
+
       return h
-        .response({ message: "Book updated", book: updatedBook })
+        .response({
+          message: "Book updated",
+          book: {
+            ...updatedBook,
+            stock: updatedStock ? { quantity: updatedStock.quantity } : null,
+          },
+        })
         .code(200);
     } catch (error) {
       console.error("Error updating book:", error);
