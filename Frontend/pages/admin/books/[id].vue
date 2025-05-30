@@ -18,7 +18,7 @@ const book = ref({
   published: '',
   publisher: '',
   image: '',
-  stock: 0, // เปลี่ยนจาก initialQuantity เป็น stock
+  stock: 0, 
 });
 
 const categories = ref([]);
@@ -65,18 +65,25 @@ onMounted(async () => {
 
 const saveBook = async () => {
   try {
+    // เตรียม payload
     const payload = {
       title: book.value.title,
-      price: book.value.price,
+      price: Number(book.value.price), // ใช้ Number เพื่อให้แน่ใจว่าเป็นตัวเลข
       description: book.value.description,
       categoryIds: book.value.categoryId ? [book.value.categoryId] : [],
-      initialQuantity: book.value.stock, // ส่ง stock ไปในชื่อ initialQuantity
       author: book.value.author,
       isbn: book.value.isbn,
       published: book.value.published,
       publisher: book.value.publisher,
       image: book.value.image,
     };
+
+    // เพิ่มข้อมูลสต็อกใน payload โดยใช้ชื่อที่ถูกต้องตาม API
+    if (bookId === 'new') {
+      payload.initialQuantity = Number(book.value.stock); // สำหรับสร้างใหม่
+    } else {
+      payload.quantity = Number(book.value.stock); // สำหรับแก้ไข
+    }
 
     console.log('Payload being sent:', payload);
 
@@ -95,7 +102,7 @@ const saveBook = async () => {
       console.log('PUT Response:', response);
       alert('แก้ไขหนังสือสำเร็จ');
     }
-    router.push('/admin');
+    router.push('/admin?refresh=true'); // เพิ่ม query เพื่อรีเฟรชหน้า admin
   } catch (error) {
     console.error('Error saving book:', error);
     console.log('Error Response:', error.data || error.response?._data);
