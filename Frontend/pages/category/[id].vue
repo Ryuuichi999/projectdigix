@@ -1,4 +1,5 @@
 <template>
+  <div class="bg-amber-50 min-h-screen">
   <section class="py-8 max-w-5xl mx-auto">
     <NuxtLink to="/" class="text-sm text-blue-500 hover:underline mb-4 block">
       ← ย้อนกลับ
@@ -35,6 +36,7 @@
       ไม่พบหนังสือในหมวดหมู่ {{ categoryName }}
     </p>
   </section>
+  </div>
 </template>
 
 <script setup>

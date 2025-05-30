@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 const activeTab = ref('users');
@@ -23,9 +23,7 @@ const fetchData = async () => {
     }
 
     try {
-      const response = await $fetch('http://localhost:3000/users', {
-        method: 'GET',
-      });
+      const response = await $fetch('http://localhost:3000/users', { method: 'GET' });
       users.value = response.map(user => ({
         id: user.id,
         name: user.username,
@@ -38,9 +36,7 @@ const fetchData = async () => {
     }
 
     try {
-      const bookResponse = await $fetch('http://localhost:3000/books', {
-        method: 'GET',
-      });
+      const bookResponse = await $fetch('http://localhost:3000/books', { method: 'GET' });
       books.value = bookResponse.map(book => ({
         id: book.id,
         title: book.title,
@@ -61,6 +57,9 @@ onMounted(fetchData);
 watch(activeTab, (newTab) => {
   if (process.client) {
     localStorage.setItem('activeTab', newTab);
+    searchQuery.value = '';
+    filteredItems.value = [];
+    selectedItem.value = null; // รีเซ็ต item ที่เลือกเมื่อเปลี่ยนแท็บ
   }
 });
 
@@ -70,7 +69,6 @@ watch(
   (refresh) => {
     if (refresh === 'true') {
       fetchData();
-      // ลบ query เพื่อป้องกันการรีเฟรชซ้ำ
       router.replace({ query: {} });
     }
   }
@@ -78,10 +76,12 @@ watch(
 
 const deleteUser = async (id) => {
   try {
-    await $fetch(`http://localhost:3000/users/${id}`, {
-      method: 'DELETE',
-    });
+    await $fetch(`http://localhost:3000/users/${id}`, { method: 'DELETE' });
     users.value = users.value.filter((user) => user.id !== id);
+    if (selectedItem.value && selectedItem.value.id === id) {
+      selectedItem.value = null;
+      searchQuery.value = '';
+    }
     alert('ลบผู้ใช้สำเร็จ');
   } catch (error) {
     console.error('Error deleting user:', error);
@@ -91,10 +91,12 @@ const deleteUser = async (id) => {
 
 const deleteBook = async (id) => {
   try {
-    await $fetch(`http://localhost:3000/books/${id}`, {
-      method: 'DELETE',
-    });
+    await $fetch(`http://localhost:3000/books/${id}`, { method: 'DELETE' });
     books.value = books.value.filter((book) => book.id !== id);
+    if (selectedItem.value && selectedItem.value.id === id) {
+      selectedItem.value = null;
+      searchQuery.value = '';
+    }
     alert('ลบหนังสือสำเร็จ');
   } catch (error) {
     console.error('Error deleting book:', error);
@@ -109,6 +111,69 @@ const truncateDescription = (text, maxLength = 40) => {
   }
   return text;
 };
+
+// การค้นหา
+const searchQuery = ref('');
+const filteredItems = ref([]);
+const selectedItem = ref(null);
+
+watch(searchQuery, (newQuery) => {
+  // ถ้าแถบค้นหาว่าง ไม่ต้องแสดง dropdown
+  if (!newQuery.trim()) {
+    filteredItems.value = [];
+    return;
+  }
+
+  // กรองข้อมูลตามแท็บ
+  if (activeTab.value === 'users' && users.value.length > 0) {
+    filteredItems.value = users.value.filter(user =>
+      user.name.toLowerCase().includes(newQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(newQuery.toLowerCase())
+    );
+  } else if (activeTab.value === 'books' && books.value.length > 0) {
+    filteredItems.value = books.value.filter(book =>
+      book.title.toLowerCase().includes(newQuery.toLowerCase()) ||
+      book.category.toLowerCase().includes(newQuery.toLowerCase())
+    );
+  } else {
+    filteredItems.value = [];
+  }
+});
+
+// เลือก item จาก autocomplete และกรอง
+const selectItem = (item) => {
+  selectedItem.value = item;
+  searchQuery.value = activeTab.value === 'users' ? item.name : item.title;
+  filteredItems.value = []; // ปิด dropdown ทันทีเมื่อเลือก
+};
+
+// ค้นหาเมื่อกดปุ่มหรือ Enter
+const performSearch = () => {
+  if (!searchQuery.value.trim()) {
+    // ถ้าแถบค้นหาว่าง ให้แสดงข้อมูลทั้งหมด
+    selectedItem.value = null;
+  } else if (filteredItems.value.length === 1) {
+    // ถ้ามีรายการเดียวใน autocomplete ให้เลือก item นั้น
+    selectItem(filteredItems.value[0]);
+  } else if (searchQuery.value && !selectedItem.value) {
+    // หา item ที่ตรงกับ searchQuery จากรายการทั้งหมด
+    if (activeTab.value === 'users') {
+      selectedItem.value = users.value.find(user =>
+        user.name.toLowerCase() === searchQuery.value.toLowerCase() ||
+        user.email.toLowerCase() === searchQuery.value.toLowerCase()
+      );
+    } else {
+      selectedItem.value = books.value.find(book =>
+        book.title.toLowerCase() === searchQuery.value.toLowerCase()
+      );
+    }
+  }
+};
+
+// คำนวณรายการที่แสดงในตาราง
+const displayedItems = computed(() => {
+  return selectedItem.value ? [selectedItem.value] : (activeTab.value === 'users' ? users.value : books.value);
+});
 </script>
 
 <template>
@@ -134,6 +199,36 @@ const truncateDescription = (text, maxLength = 40) => {
         </button>
       </div>
 
+      <!-- Search Bar -->
+      <div class="mb-6 relative">
+        <div class="flex items-center space-x-2">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="ค้นหา..."
+            class="w-full max-w-md px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+            @keydown.enter="performSearch"
+          />
+          <button
+            @click="performSearch"
+            class="bg-amber-500 text-white px-3 py-2 rounded hover:bg-amber-600 transition cursor-pointer"
+          >
+            ค้นหา
+          </button>
+        </div>
+        <div v-if="filteredItems.length > 0" class="absolute z-10 w-full max-w-md bg-white border rounded-lg shadow-lg mt-1">
+          <div
+            v-for="item in filteredItems"
+            :key="item.id"
+            @click="selectItem(item)"
+            class="px-4 py-2 cursor-pointer hover:bg-gray-100"
+          >
+            <span v-if="activeTab === 'users'">{{ item.name }} ({{ item.email }})</span>
+            <span v-else>{{ item.title }} ({{ item.category }}, {{ item.stock }} หน่วย)</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Users Section -->
       <div v-if="activeTab === 'users'" class="mb-12">
         <div class="flex justify-between items-center mb-4">
@@ -157,7 +252,7 @@ const truncateDescription = (text, maxLength = 40) => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="user in users" :key="user.id" class="border-b">
+              <tr v-for="user in displayedItems" :key="user.id" class="border-b">
                 <td class="px-4 py-2">{{ user.id }}</td>
                 <td class="px-4 py-2">{{ user.name }}</td>
                 <td class="px-4 py-2">{{ user.email }}</td>
@@ -176,6 +271,9 @@ const truncateDescription = (text, maxLength = 40) => {
                     ลบ
                   </button>
                 </td>
+              </tr>
+              <tr v-if="displayedItems.length === 0" class="border-b">
+                <td colspan="5" class="px-4 py-2 text-center text-gray-500">ไม่มีข้อมูล</td>
               </tr>
             </tbody>
           </table>
@@ -207,7 +305,7 @@ const truncateDescription = (text, maxLength = 40) => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="book in books" :key="book.id" class="border-b">
+              <tr v-for="book in displayedItems" :key="book.id" class="border-b">
                 <td class="px-4 py-2">{{ book.id }}</td>
                 <td class="px-4 py-2">{{ book.title }}</td>
                 <td class="px-4 py-2">{{ book.price }} ฿</td>
@@ -229,6 +327,9 @@ const truncateDescription = (text, maxLength = 40) => {
                   </button>
                 </td>
               </tr>
+              <tr v-if="displayedItems.length === 0" class="border-b">
+                <td colspan="7" class="px-4 py-2 text-center text-gray-500">ไม่มีข้อมูล</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -236,3 +337,27 @@ const truncateDescription = (text, maxLength = 40) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* ใช้ CSS เพื่อปรับแต่ง dropdown */
+.autocomplete {
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+  max-width: 500px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 0.25rem;
+}
+
+.autocomplete-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.autocomplete-item:hover {
+  background-color: #f3f4f6;
+}
+</style>
