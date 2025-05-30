@@ -55,7 +55,7 @@
             @click="selectBook(book)"
             class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-gray-700"
           >
-            {{ book.title }} 
+            {{ book.title }}
           </div>
         </div>
       </div>
@@ -148,9 +148,23 @@
 import { computed, onMounted, ref, watch, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
+import Swal from "sweetalert2"; 
 
 const router = useRouter();
 const { $event } = useNuxtApp();
+
+// กำหนดค่า Toast
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 1500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  }
+});
 
 // เก็บข้อมูลผู้ใช้และตะกร้า
 const user = ref(null);
@@ -223,7 +237,13 @@ onMounted(() => {
       const newUser = localStorage.getItem("user");
       if (newUser) {
         const parsedUser = JSON.parse(newUser);
-        if (user.value?.role !== parsedUser.role) {
+        if (user.value?.loggedIn !== parsedUser.loggedIn) { // ตรวจสอบการเปลี่ยนแปลงสถานะล็อกอิน
+          if (parsedUser.loggedIn) {
+            Toast.fire({
+              icon: "success",
+              title: "ล็อกอินสำเร็จ"
+            });
+          }
           user.value = parsedUser;
         }
       }
@@ -279,7 +299,10 @@ const logout = () => {
   cart.value = [];
   isDropdownOpen.value = false;
   router.push("/");
-  alert("ออกจากระบบเรียบร้อยแล้ว");
+  Toast.fire({
+    icon: "success",
+    title: "ออกจากระบบสำเร็จ"
+  });
 };
 </script>
 

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import Swal from 'sweetalert2'; // นำเข้า SweetAlert2
 
 const route = useRoute();
 const router = useRouter();
@@ -13,6 +14,19 @@ const user = ref({
   password: "",
   role: "user",
   confirmPassword: "",
+});
+
+// กำหนดค่า Toast
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 1500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  }
 });
 
 onMounted(async () => {
@@ -38,6 +52,12 @@ onMounted(async () => {
         };
       } catch (error) {
         console.error("Error fetching user:", error);
+        Swal.fire({
+          icon: "error",
+          title: "ข้อผิดพลาด",
+          text: "ไม่สามารถดึงข้อมูลผู้ใช้ได้: " + (error.message || 'Unknown error'),
+          confirmButtonColor: "#f59e0b"
+        });
         router.push("/admin");
       }
     }
@@ -57,7 +77,10 @@ const saveUser = async () => {
           role: user.value.role,
         },
       });
-      alert("เพิ่มผู้ใช้สำเร็จ");
+      Toast.fire({
+        icon: "success",
+        title: "เพิ่มผู้ใช้สำเร็จ"
+      });
     } else {
       const updateData = {
         username: user.value.username,
@@ -71,17 +94,35 @@ const saveUser = async () => {
         method: "PUT",
         body: updateData,
       });
-      alert("อัปเดตผู้ใช้สำเร็จ");
+      Toast.fire({
+        icon: "success",
+        title: "อัปเดตผู้ใช้สำเร็จ"
+      });
     }
     router.push("/admin");
   } catch (error) {
     console.error("Error saving user:", error);
     if (error.status === 400) {
-      alert(error.data.message || "ข้อมูลไม่ถูกต้อง");
+      Swal.fire({
+        icon: "error",
+        title: "ข้อมูลไม่ถูกต้อง",
+        text: error.data.message || "ข้อมูลที่ส่งไม่ถูกต้อง",
+        confirmButtonColor: "#f59e0b"
+      });
     } else if (error.status === 500) {
-      alert("เกิดข้อผิดพลาดในเซิร์ฟเวอร์");
+      Swal.fire({
+        icon: "error",
+        title: "ข้อผิดพลาดเซิร์ฟเวอร์",
+        text: "เกิดข้อผิดพลาดในเซิร์ฟเวอร์",
+        confirmButtonColor: "#f59e0b"
+      });
     } else {
-      alert("เกิดข้อผิดพลาด: " + (error.message || "Unknown error"));
+      Swal.fire({
+        icon: "error",
+        title: "ข้อผิดพลาด",
+        text: "เกิดข้อผิดพลาด: " + (error.message || "Unknown error"),
+        confirmButtonColor: "#f59e0b"
+      });
     }
   }
 };
@@ -126,11 +167,6 @@ const saveUser = async () => {
             type="password"
             class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
             :required="userId === 'new'"
-            :placeholder="
-              userId === 'new'
-                ? 'กรอกรหัสผ่าน'
-                : 'กรอกเฉพาะเมื่อต้องการเปลี่ยนรหัสผ่าน'
-            "
           />
         </div>
         <div v-if="userId === 'new'" class="mb-4">

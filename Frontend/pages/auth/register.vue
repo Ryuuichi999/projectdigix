@@ -3,6 +3,7 @@ definePageMeta({ layout: false });
 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import Swal from 'sweetalert2'; 
 
 const username = ref('');
 const email = ref('');
@@ -10,14 +11,37 @@ const password = ref('');
 const confirmPassword = ref('');
 const router = useRouter();
 
+// กำหนดค่า Toast
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 1500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  }
+});
+
 const handleRegister = async () => {
   // Client-side validation
   if (!username.value || !email.value || !password.value || !confirmPassword.value) {
-    alert('Please fill in all fields');
+    Swal.fire({
+      icon: "warning",
+      title: "กรุณากรอกข้อมูล",
+      text: "กรุณากรอกข้อมูลให้ครบทุกช่อง",
+      confirmButtonColor: "#f59e0b"
+    });
     return;
   }
   if (password.value !== confirmPassword.value) {
-    alert('Passwords do not match');
+    Swal.fire({
+      icon: "error",
+      title: "รหัสผ่านไม่ตรงกัน",
+      text: "รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน",
+      confirmButtonColor: "#f59e0b"
+    });
     return;
   }
 
@@ -33,10 +57,19 @@ const handleRegister = async () => {
       },
     });
 
-    alert('สมัครสมาชิกสำเร็จ');
+    // แสดงการแจ้งเตือนแบบ Toast เมื่อสมัครสมาชิกสำเร็จ
+    Toast.fire({
+      icon: "success",
+      title: "สมัครสมาชิกสำเร็จ"
+    });
     router.push('/');
   } catch (err) {
-    alert('สมัครสมาชิกล้มเหลว: ' + (err?.data?.message || err.message));
+    Swal.fire({
+      icon: "error",
+      title: "สมัครสมาชิกล้มเหลว",
+      text: err?.data?.message || err.message,
+      confirmButtonColor: "#f59e0b"
+    });
   }
 };
 </script>

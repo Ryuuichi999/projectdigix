@@ -1,12 +1,26 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import Swal from 'sweetalert2'; // นำเข้า SweetAlert2
 
 const activeTab = ref('users');
 const users = ref([]);
 const books = ref([]);
 const router = useRouter();
 const route = useRoute();
+
+// กำหนดค่า Toast
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 1500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  }
+});
 
 // ฟังก์ชันดึงข้อมูล
 const fetchData = async () => {
@@ -32,6 +46,12 @@ const fetchData = async () => {
       }));
     } catch (error) {
       console.error('Error fetching users:', error);
+      Swal.fire({
+        icon: "error",
+        title: "ข้อผิดพลาด",
+        text: "ไม่สามารถดึงข้อมูลผู้ใช้ได้: " + (error.message || 'Unknown error'),
+        confirmButtonColor: "#f59e0b"
+      });
       users.value = [];
     }
 
@@ -47,6 +67,12 @@ const fetchData = async () => {
       }));
     } catch (error) {
       console.error('Error fetching books:', error);
+      Swal.fire({
+        icon: "error",
+        title: "ข้อผิดพลาด",
+        text: "ไม่สามารถดึงข้อมูลหนังสือได้: " + (error.message || 'Unknown error'),
+        confirmButtonColor: "#f59e0b"
+      });
       books.value = [];
     }
   }
@@ -59,7 +85,7 @@ watch(activeTab, (newTab) => {
     localStorage.setItem('activeTab', newTab);
     searchQuery.value = '';
     filteredItems.value = [];
-    selectedItem.value = null; // รีเซ็ต item ที่เลือกเมื่อเปลี่ยนแท็บ
+    selectedItem.value = null; 
   }
 });
 
@@ -82,10 +108,18 @@ const deleteUser = async (id) => {
       selectedItem.value = null;
       searchQuery.value = '';
     }
-    alert('ลบผู้ใช้สำเร็จ');
+    Toast.fire({
+      icon: "success",
+      title: "ลบผู้ใช้สำเร็จ"
+    });
   } catch (error) {
     console.error('Error deleting user:', error);
-    alert('เกิดข้อผิดพลาดในการลบผู้ใช้: ' + (error.message || 'Unknown error'));
+    Swal.fire({
+      icon: "error",
+      title: "ข้อผิดพลาด",
+      text: "เกิดข้อผิดพลาดในการลบผู้ใช้: " + (error.message || 'Unknown error'),
+      confirmButtonColor: "#f59e0b"
+    });
   }
 };
 
@@ -97,10 +131,18 @@ const deleteBook = async (id) => {
       selectedItem.value = null;
       searchQuery.value = '';
     }
-    alert('ลบหนังสือสำเร็จ');
+    Toast.fire({
+      icon: "success",
+      title: "ลบหนังสือสำเร็จ"
+    });
   } catch (error) {
     console.error('Error deleting book:', error);
-    alert('เกิดข้อผิดพลาดในการลบหนังสือ: ' + (error.message || 'Unknown error'));
+    Swal.fire({
+      icon: "error",
+      title: "ข้อผิดพลาด",
+      text: "เกิดข้อผิดพลาดในการลบหนังสือ: " + (error.message || 'Unknown error'),
+      confirmButtonColor: "#f59e0b"
+    });
   }
 };
 
@@ -118,13 +160,11 @@ const filteredItems = ref([]);
 const selectedItem = ref(null);
 
 watch(searchQuery, (newQuery) => {
-  // ถ้าแถบค้นหาว่าง ไม่ต้องแสดง dropdown
   if (!newQuery.trim()) {
     filteredItems.value = [];
     return;
   }
 
-  // กรองข้อมูลตามแท็บ
   if (activeTab.value === 'users' && users.value.length > 0) {
     filteredItems.value = users.value.filter(user =>
       user.name.toLowerCase().includes(newQuery.toLowerCase()) ||
@@ -140,23 +180,18 @@ watch(searchQuery, (newQuery) => {
   }
 });
 
-// เลือก item จาก autocomplete และกรอง
 const selectItem = (item) => {
   selectedItem.value = item;
   searchQuery.value = activeTab.value === 'users' ? item.name : item.title;
-  filteredItems.value = []; // ปิด dropdown ทันทีเมื่อเลือก
+  filteredItems.value = [];
 };
 
-// ค้นหาเมื่อกดปุ่มหรือ Enter
 const performSearch = () => {
   if (!searchQuery.value.trim()) {
-    // ถ้าแถบค้นหาว่าง ให้แสดงข้อมูลทั้งหมด
     selectedItem.value = null;
   } else if (filteredItems.value.length === 1) {
-    // ถ้ามีรายการเดียวใน autocomplete ให้เลือก item นั้น
     selectItem(filteredItems.value[0]);
   } else if (searchQuery.value && !selectedItem.value) {
-    // หา item ที่ตรงกับ searchQuery จากรายการทั้งหมด
     if (activeTab.value === 'users') {
       selectedItem.value = users.value.find(user =>
         user.name.toLowerCase() === searchQuery.value.toLowerCase() ||
@@ -170,7 +205,6 @@ const performSearch = () => {
   }
 };
 
-// คำนวณรายการที่แสดงในตาราง
 const displayedItems = computed(() => {
   return selectedItem.value ? [selectedItem.value] : (activeTab.value === 'users' ? users.value : books.value);
 });
@@ -224,7 +258,7 @@ const displayedItems = computed(() => {
             class="px-4 py-2 cursor-pointer hover:bg-gray-100"
           >
             <span v-if="activeTab === 'users'">{{ item.name }} ({{ item.email }})</span>
-            <span v-else>{{ item.title }} ({{ item.category }}, {{ item.stock }} หน่วย)</span>
+            <span v-else>{{ item.title }} </span>
           </div>
         </div>
       </div>
@@ -339,7 +373,6 @@ const displayedItems = computed(() => {
 </template>
 
 <style scoped>
-/* ใช้ CSS เพื่อปรับแต่ง dropdown */
 .autocomplete {
   position: absolute;
   z-index: 10;

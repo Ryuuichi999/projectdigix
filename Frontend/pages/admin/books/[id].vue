@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import Swal from 'sweetalert2'; // นำเข้า SweetAlert2
 
 const route = useRoute();
 const router = useRouter();
@@ -23,6 +24,19 @@ const book = ref({
 
 const categories = ref([]);
 
+// กำหนดค่า Toast
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 1500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  }
+});
+
 onMounted(async () => {
   try {
     const categoryResponse = await $fetch('http://localhost:3000/categories');
@@ -32,6 +46,12 @@ onMounted(async () => {
     }));
   } catch (error) {
     console.error('Error fetching categories:', error);
+    Swal.fire({
+      icon: "error",
+      title: "ข้อผิดพลาด",
+      text: "ไม่สามารถดึงข้อมูลหมวดหมู่ได้: " + (error.message || 'Unknown error'),
+      confirmButtonColor: "#f59e0b"
+    });
     categories.value = [];
   }
 
@@ -54,10 +74,16 @@ onMounted(async () => {
         published: bookResponse.published || '',
         publisher: bookResponse.publisher || '',
         image: bookResponse.image || '',
-        stock: bookResponse.stock?.quantity ?? 0, // ดึง stock.quantity
+        stock: bookResponse.stock?.quantity ?? 0, 
       };
     } catch (error) {
       console.error('Error fetching book:', error);
+      Swal.fire({
+        icon: "error",
+        title: "ข้อผิดพลาด",
+        text: "ไม่สามารถดึงข้อมูลหนังสือได้: " + (error.message || 'Unknown error'),
+        confirmButtonColor: "#f59e0b"
+      });
       router.push('/admin');
     }
   }
@@ -65,10 +91,9 @@ onMounted(async () => {
 
 const saveBook = async () => {
   try {
-    // เตรียม payload
     const payload = {
       title: book.value.title,
-      price: Number(book.value.price), // ใช้ Number เพื่อให้แน่ใจว่าเป็นตัวเลข
+      price: Number(book.value.price), 
       description: book.value.description,
       categoryIds: book.value.categoryId ? [book.value.categoryId] : [],
       author: book.value.author,
@@ -78,11 +103,10 @@ const saveBook = async () => {
       image: book.value.image,
     };
 
-    // เพิ่มข้อมูลสต็อกใน payload โดยใช้ชื่อที่ถูกต้องตาม API
     if (bookId === 'new') {
-      payload.initialQuantity = Number(book.value.stock); // สำหรับสร้างใหม่
+      payload.initialQuantity = Number(book.value.stock); 
     } else {
-      payload.quantity = Number(book.value.stock); // สำหรับแก้ไข
+      payload.quantity = Number(book.value.stock); 
     }
 
     console.log('Payload being sent:', payload);
@@ -93,20 +117,31 @@ const saveBook = async () => {
         body: payload,
       });
       console.log('POST Response:', response);
-      alert('เพิ่มหนังสือสำเร็จ');
+      Toast.fire({
+        icon: "success",
+        title: "เพิ่มหนังสือสำเร็จ"
+      });
     } else {
       const response = await $fetch(`http://localhost:3000/books/${bookId}`, {
         method: 'PUT',
         body: payload,
       });
       console.log('PUT Response:', response);
-      alert('แก้ไขหนังสือสำเร็จ');
+      Toast.fire({
+        icon: "success",
+        title: "แก้ไขหนังสือสำเร็จ"
+      });
     }
-    router.push('/admin?refresh=true'); // เพิ่ม query เพื่อรีเฟรชหน้า admin
+    router.push('/admin?refresh=true'); 
   } catch (error) {
     console.error('Error saving book:', error);
     console.log('Error Response:', error.data || error.response?._data);
-    alert('เกิดข้อผิดพลาดในการบันทึกหนังสือ: ' + (error.message || 'Unknown error'));
+    Swal.fire({
+      icon: "error",
+      title: "ข้อผิดพลาด",
+      text: "เกิดข้อผิดพลาดในการบันทึกหนังสือ: " + (error.message || 'Unknown error'),
+      confirmButtonColor: "#f59e0b"
+    });
   }
 };
 </script>

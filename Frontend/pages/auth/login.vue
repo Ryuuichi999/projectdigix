@@ -3,10 +3,24 @@ definePageMeta({ layout: false });
 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import Swal from 'sweetalert2'; 
 
 const email = ref('');
 const password = ref('');
 const router = useRouter();
+
+// กำหนดค่า Toast
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 1500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  }
+});
 
 const handleLogin = async () => {
   try {
@@ -42,7 +56,12 @@ const handleLogin = async () => {
       console.log("Stored user data:", userData);
     }
 
-    alert('เข้าสู่ระบบสำเร็จ');
+    // แสดงการแจ้งเตือนแบบ Toast เมื่อล็อกอินสำเร็จ
+    Toast.fire({
+      icon: "success",
+      title: "ล็อกอินสำเร็จ"
+    });
+
     const role = userPayload.role || 'user';
     if (role === 'admin') {
       router.push('/admin');
@@ -52,11 +71,26 @@ const handleLogin = async () => {
   } catch (error) {
     console.error('Login failed:', error);
     if (error.status === 401) {
-      alert('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+      Swal.fire({
+        icon: "error",
+        title: "ล็อกอินล้มเหลว",
+        text: "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+        confirmButtonColor: "#f59e0b" 
+      });
     } else if (error.status === 500) {
-      alert('เกิดข้อผิดพลาดในเซิร์ฟเวอร์ กรุณาตรวจสอบการตั้งค่าฐานข้อมูล');
+      Swal.fire({
+        icon: "error",
+        title: "ข้อผิดพลาดเซิร์ฟเวอร์",
+        text: "เกิดข้อผิดพลาดในเซิร์ฟเวอร์ กรุณาตรวจสอบการตั้งค่าฐานข้อมูล",
+        confirmButtonColor: "#f59e0b"
+      });
     } else {
-      alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + error.message);
+      Swal.fire({
+        icon: "error",
+        title: "ล็อกอินล้มเหลว",
+        text: `เกิดข้อผิดพลาด: ${error.message}`,
+        confirmButtonColor: "#f59e0b"
+      });
     }
   }
 };
