@@ -1,5 +1,4 @@
 const { createReceiptSchema } = require("../validations/order.validations");
-
 const { z } = require("zod");
 const prisma = require("../utils/prisma");
 
@@ -16,6 +15,11 @@ const validateZod = (schema) => async (value, options) => {
     );
   }
 };
+
+// ตรวจสอบว่า createReceiptSchema มีการกำหนดหรือไม่
+if (!createReceiptSchema) {
+  throw new Error("createReceiptSchema is not defined in order.validations");
+}
 
 const getAllReceipts = {
   description: "Get list of all receipts",
@@ -50,13 +54,13 @@ const getReceiptById = {
       return h.response(receipt).code(200);
     } catch (error) {
       console.error("Error fetching receipt:", error);
-      return h.response({ message: "Failed to fetch receipt" }).code(500);
+      return h.response({ message: `Failed to fetch receipt: ${error.message}` }).code(500);
     }
   },
 };
 
 const createReceipt = {
-  description: "Create receipt",
+  description: "Create a new receipt",
   tags: ["api", "receipt"],
   auth: false,
   validate: { payload: validateZod(createReceiptSchema) },
@@ -64,33 +68,39 @@ const createReceipt = {
     const { order_id, receipt_number, total_amount, issued_at } = request.payload;
 
     try {
-      const order = await prisma.order.findUnique({ where: { id: order_id } });
+      // ตรวจสอบว่า order_id มีอยู่ในตาราง order
+      const order = await prisma.order.findUnique({ where: { id: Number(order_id) } });
       if (!order) return h.response({ message: "Order not found" }).code(404);
 
-      const existingReceipt = await prisma.receipt.findUnique({ where: { order_id } });
+      // ตรวจสอบว่า receipt สำหรับ order_id นี้ยังไม่มี
+      const existingReceipt = await prisma.receipt.findUnique({ where: { order_id: Number(order_id) } });
       if (existingReceipt) {
         return h.response({ message: "Receipt already exists for this order" }).code(400);
       }
 
+      // สร้าง receipt ใหม่
       const newReceipt = await prisma.receipt.create({
         data: {
-          order_id,
+          order_id: Number(order_id),
           receipt_number,
           total_amount,
-          issued_at: issued_at ? new Date(issued_at) : new Date(),
+          issued_at: issued_at ? new Date(issued_at) : new Date(), // ป้องกัน error ด้วยการตรวจสอบ
         },
         include: { order: true },
       });
 
       return h
         .response({
-          message: "Receipt created",
+          message: "Receipt created successfully",
           receipt: newReceipt,
         })
         .code(201);
     } catch (error) {
       console.error("Error creating receipt:", error);
-      return h.response({ message: "Internal server error" }).code(500);
+      if (error instanceof z.ZodError) {
+        return h.response({ message: `Validation error: ${error.errors.map(e => e.message).join(", ")}` }).code(400);
+      }
+      return h.response({ message: `Internal server error: ${error.message}` }).code(500);
     }
   },
 };

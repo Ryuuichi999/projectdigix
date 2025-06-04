@@ -146,7 +146,19 @@ const deleteOrder = {
       const order = await prisma.order.findUnique({ where: { id: Number(id) } });
       if (!order) return h.response({ message: "Order not found" }).code(404);
 
+      // ลบ Order Details ที่เกี่ยวข้อง
+      await prisma.orderDetail.deleteMany({
+        where: { order_id: Number(id) },
+      });
+
+      // ลบ Receipt ที่เกี่ยวข้อง (ถ้ามี)
+      await prisma.receipt.deleteMany({
+        where: { order_id: Number(id) },
+      });
+
+      // ลบ Order
       await prisma.order.delete({ where: { id: Number(id) } });
+
       return h.response({ message: "Order deleted" }).code(200);
     } catch (error) {
       console.error("Error deleting order:", error);
@@ -154,7 +166,6 @@ const deleteOrder = {
     }
   },
 };
-
 const getAllOrderDetails = {
   description: "Get list of all order details",
   tags: ["api", "orderDetail"],

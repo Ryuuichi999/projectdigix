@@ -62,7 +62,11 @@ const getCategoryById = {
         include: {
           bookCategories: {
             include: {
-              book: true,
+              book: {
+                include: {
+                  stock: true, 
+                },
+              },
             },
           },
         },
@@ -72,7 +76,13 @@ const getCategoryById = {
       const formattedCategory = {
         id: category.id,
         category_name: category.category_name,
-        books: category.bookCategories.map((bc) => bc.book),
+        books: category.bookCategories.map((bc) => ({
+          id: bc.book.id,
+          title: bc.book.title,
+          price: bc.book.price,
+          image: bc.book.image || '/images/default-book.jpg',
+          stock: bc.book.stock?.quantity ?? 0, 
+        })),
       };
       return h.response(formattedCategory).code(200);
     } catch (error) {

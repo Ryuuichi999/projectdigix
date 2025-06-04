@@ -18,9 +18,9 @@ const createOrderDetailSchema = z.object({
 });
 
 const createReceiptSchema = z.object({
-  order_id: z.number().int().positive(),
-  receipt_number: z.string().min(1),
-  total_amount: z.number().positive(),
+  order_id: z.number().positive("Order ID must be a positive number"),
+  receipt_number: z.string().min(1, "Receipt number is required"),
+  total_amount: z.number().nonnegative("Total amount must be non-negative"),
   issued_at: z.string().datetime().optional(),
 });
 
