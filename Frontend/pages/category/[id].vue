@@ -15,20 +15,33 @@
           :to="`/book/${book.id}`"
           class="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-200 hover:border-amber-300 group"
         >
-          <img
-            :src="book.image"
-            alt="Book"
-            class="w-full aspect-[3/4] object-cover rounded"
-          />
+          <div class="relative">
+            <img
+              :src="book.image"
+              alt="Book"
+              class="w-full aspect-[3/4] object-cover rounded"
+            />
+            <div
+              v-if="book.stock <= 0"
+              class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-xl font-bold rounded"
+            >
+              หมด
+            </div>
+          </div>
+
           <h3 class="text-lg font-semibold mt-2">{{ book.title }}</h3>
+          <p class="text-sm text-red-400 font-bold">คงเหลือ: {{ book.stock }} เล่ม</p>
+
           <div class="flex items-center justify-between mt-2">
-            <p class="text-red-600 font-bold text-sm">{{ book.price }}฿</p>
+            <p class="text-red-600 font-bold text-sm">{{ book.price || 0 }}฿</p>
             <button
               @click.prevent="addToCart(book)"
               class="flex items-center cursor-pointer gap-1 bg-amber-400 hover:bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded transition"
-              :class="{ 'bg-green-500 hover:bg-green-600': addedBooks[book.id] }"
+              :class="{
+                'bg-green-500 hover:bg-green-600': addedBooks[book.id],
+              }"
             >
-              <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-6 h-6 " />
+              <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-6 h-6" />
               <span v-if="!addedBooks[book.id]">ใส่ตะกร้า</span>
               <span v-else class="flex items-center">
                 เพิ่มแล้ว
@@ -58,10 +71,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useNuxtApp } from 'nuxt/app';
-import Swal from 'sweetalert2';
+import { ref, onMounted, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useNuxtApp } from "nuxt/app";
+import Swal from "sweetalert2";
 
 const route = useRoute();
 const router = useRouter();
@@ -84,45 +97,51 @@ const Toast = Swal.mixin({
 const categoryId = parseInt(route.params.id);
 
 // สถานะสำหรับเก็บข้อมูล
-const categoryName = ref('');
+const categoryName = ref("");
 const allBooks = ref([]);
-const filteredBooks = computed(() => allBooks.value.filter(book => 
-  book.categories?.some(cat => cat.category_id === categoryId)
-));
+const filteredBooks = computed(() =>
+  allBooks.value.filter((book) =>
+    book.categories?.some((cat) => cat.category_id === categoryId)
+  )
+);
 const addedBooks = ref({});
 
 // ดึงข้อมูลหนังสือจาก API /books
 const fetchBooks = async () => {
   try {
     if (isNaN(categoryId)) {
-      categoryName.value = 'ไม่ทราบหมวดหมู่';
+      categoryName.value = "ไม่ทราบหมวดหมู่";
       allBooks.value = [];
       return;
     }
 
-    const response = await $fetch('http://localhost:3000/books');
-    console.log('API Response from /books:', response); // Log เพื่อตรวจสอบข้อมูล
+    const response = await $fetch("http://localhost:3000/books");
+    console.log("API Response from /books:", response); // Log เพื่อตรวจสอบข้อมูล
     if (!response || !Array.isArray(response)) {
-      categoryName.value = 'ไม่ทราบหมวดหมู่';
+      categoryName.value = "ไม่ทราบหมวดหมู่";
       allBooks.value = [];
       return;
     }
 
-    categoryName.value = response.find(book => 
-      book.categories?.some(cat => cat.category_id === categoryId)
-    )?.categories?.find(cat => cat.category_id === categoryId)?.category?.category_name || 'ไม่ทราบหมวดหมู่';
+    categoryName.value =
+      response
+        .find((book) =>
+          book.categories?.some((cat) => cat.category_id === categoryId)
+        )
+        ?.categories?.find((cat) => cat.category_id === categoryId)?.category
+        ?.category_name || "ไม่ทราบหมวดหมู่";
 
-    allBooks.value = response.map(book => ({
+    allBooks.value = response.map((book) => ({
       id: book.id,
       title: book.title,
       price: book.price,
-      image: book.image || '/images/default-book.jpg',
+      image: book.image || "/images/default-book.jpg",
       stock: book.stock?.quantity ?? 0,
       categories: book.categories || [],
     }));
   } catch (error) {
-    console.error('Error fetching books:', error);
-    categoryName.value = 'ไม่ทราบหมวดหมู่';
+    console.error("Error fetching books:", error);
+    categoryName.value = "ไม่ทราบหมวดหมู่";
     allBooks.value = [];
   }
 };
@@ -130,8 +149,8 @@ const fetchBooks = async () => {
 // เพิ่มสินค้าลงตะกร้า
 const addToCart = (book) => {
   if (process.client) {
-    console.log('Adding to cart - Book:', book);
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    console.log("Adding to cart - Book:", book);
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (!user.loggedIn) {
       Swal.fire({
         icon: "warning",
@@ -141,14 +160,14 @@ const addToCart = (book) => {
         confirmButtonText: "ไปที่หน้าล็อกอิน",
       }).then((result) => {
         if (result.isConfirmed) {
-          router.push('/auth/login');
+          router.push("/auth/login");
         }
       });
       return;
     }
 
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingItem = cart.find(item => item.id === book.id);
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const existingItem = cart.find((item) => item.id === book.id);
 
     if (existingItem) {
       if (existingItem.quantity >= book.stock) {
@@ -162,7 +181,7 @@ const addToCart = (book) => {
       }
       existingItem.quantity += 1;
     } else {
-      console.log('Stock value:', book.stock);
+      console.log("Stock value:", book.stock);
       if (book.stock <= 0) {
         Swal.fire({
           icon: "warning",
@@ -182,12 +201,12 @@ const addToCart = (book) => {
       });
     }
 
-    localStorage.setItem('cart', JSON.stringify(cart));
+    localStorage.setItem("cart", JSON.stringify(cart));
     addedBooks.value[book.id] = true;
     setTimeout(() => {
       addedBooks.value[book.id] = false;
     }, 2000);
-    $event.emit('cart-updated');
+    $event.emit("cart-updated");
     Toast.fire({
       icon: "success",
       title: "เพิ่มสินค้าในตะกร้าสำเร็จ",
