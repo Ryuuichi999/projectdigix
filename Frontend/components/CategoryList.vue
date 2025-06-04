@@ -34,8 +34,8 @@ const fetchCategories = async () => {
     const response = await $fetch('http://localhost:3000/categories');
     categories.value = response.map(category => ({
       id: category.id,
-      category_name: category.category_name, // ใช้ category_name จาก API
-      // ไม่ต้องสร้าง value เพราะใช้ id แทน
+      category_name: category.category_name, 
+
     }));
   } catch (error) {
     console.error('Error fetching categories:', error);
