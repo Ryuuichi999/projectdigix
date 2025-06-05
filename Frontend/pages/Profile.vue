@@ -37,7 +37,7 @@ onMounted(() => {
       return;
     }
     userId.value = Number(user.id);
-    userName.value = user.name || user.username || user.email?.split('@')[0] || "ผู้ใช้";
+    userName.value =  user.username || user.email?.split('@')[0] || "ผู้ใช้";
     userEmail.value = user.email || "";
     fetchUser();
   }
@@ -49,7 +49,7 @@ const fetchUser = async () => {
     const response = await $fetch(`http://localhost:3000/users/${userId.value}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
-    userName.value = response.name || response.username || response.email?.split('@')[0] || "ผู้ใช้";
+    userName.value =  response.username || response.email?.split('@')[0] || "ผู้ใช้";
     userEmail.value = response.email || "";
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -88,7 +88,7 @@ const updateProfile = async () => {
   isLoading.value = true;
   try {
     const body = {
-      name: userName.value,
+      username: userName.value,
       email: userEmail.value,
     };
     if (password.value) {
@@ -104,7 +104,7 @@ const updateProfile = async () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     localStorage.setItem("user", JSON.stringify({
       ...user,
-      name: userName.value,
+      username: userName.value,
       email: userEmail.value,
     }));
 
