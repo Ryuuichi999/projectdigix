@@ -5,13 +5,13 @@
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">
       <button class="cursor-pointer" @click="router.push('/')">
-      <div class="w-15 h-15 shadow-lg rounded-full overflow-hidden">
-        <img
-          src="/images/Logo.jpg"
-          alt="Logo"
-          class="w-full h-full object-cover"
-        />
-      </div>
+        <div class="w-15 h-15 shadow-lg rounded-full overflow-hidden">
+          <img
+            src="/images/Logo.jpg"
+            alt="Logo"
+            class="w-full h-full object-cover"
+          />
+        </div>
       </button>
       <span class="ml-4 text-lg font-semibold whitespace-nowrap drop-shadow">
         ร้านที่รวบรวมหนังสือน้อยที่สุดในประเทศไทย
@@ -123,9 +123,45 @@
         >
           <nuxt-link
             v-if="userRole !== 'admin'"
-            to="/OrderHistory"
-            class="block px-4 py-2 hover:bg-amber-200 rounded-lg transition duration-200"
+            to="/Profile"
+            class="flex px-4 py-2 hover:bg-amber-200 rounded-lg transition duration-200"
           >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+              />
+            </svg>
+
+            จัดการโปรไฟล์
+          </nuxt-link>
+          <nuxt-link
+            v-if="userRole !== 'admin'"
+            to="/OrderHistory"
+            class="flex px-4 py-2 hover:bg-amber-200 rounded-lg transition duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+              />
+            </svg>
             ประวัติการสั่งซื้อ
           </nuxt-link>
           <button
@@ -154,7 +190,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch, onUnmounted } from "vue";
+import { computed, onMounted, ref, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
 import Swal from "sweetalert2";
@@ -162,7 +198,6 @@ import Swal from "sweetalert2";
 const router = useRouter();
 const { $event } = useNuxtApp();
 
-// กำหนดค่า Toast
 const Toast = Swal.mixin({
   toast: true,
   position: "top-end",
@@ -175,7 +210,6 @@ const Toast = Swal.mixin({
   },
 });
 
-// เก็บข้อมูลผู้ใช้และตะกร้า
 const user = ref(null);
 const cart = ref([]);
 const books = ref([]);
@@ -185,7 +219,6 @@ const isDropdownOpen = ref(false);
 const userIcon = ref(null);
 const dropdown = ref(null);
 
-// ดึงข้อมูลหนังสือทั้งหมดเมื่อโหลดหน้า
 const fetchBooks = async () => {
   try {
     const response = await $fetch("http://localhost:3000/books");
@@ -200,7 +233,6 @@ const fetchBooks = async () => {
   }
 };
 
-// กรองข้อมูลหนังสือเมื่อ searchQuery เปลี่ยน
 const filterBooks = () => {
   if (!searchQuery.value.trim()) {
     filteredBooks.value = [];
@@ -213,14 +245,12 @@ const filterBooks = () => {
   );
 };
 
-// เลือกหนังสือและเลื่อนไปยังตำแหน่ง
 const selectBook = (book) => {
   searchQuery.value = book.title;
   filteredBooks.value = [];
   scrollToBook(book.id);
 };
 
-// เลื่อนไปยังหนังสือใน booklist
 const scrollToBook = (bookId) => {
   const bookElement = document.querySelector(`#book-${bookId}`);
   if (bookElement) {
@@ -236,15 +266,12 @@ onMounted(() => {
       : { loggedIn: false, name: "", role: "" };
     cart.value = JSON.parse(localStorage.getItem("cart") || "[]");
 
-    // ดึงข้อมูลหนังสือ
     fetchBooks();
 
-    // ฟัง event เพื่ออัปเดตตะกร้า
     $event.on("cart-updated", () => {
       cart.value = JSON.parse(localStorage.getItem("cart") || "[]");
     });
 
-    // ตรวจสอบการเปลี่ยนแปลงใน localStorage
     const checkUserUpdate = () => {
       const newUser = localStorage.getItem("user");
       if (newUser) {
@@ -264,7 +291,6 @@ onMounted(() => {
     onUnmounted(() => window.removeEventListener("storage", checkUserUpdate));
   }
 
-  // ปิด Dropdown เมื่อคลิกนอก
   const handleClickOutside = (event) => {
     if (
       userIcon.value &&
@@ -284,7 +310,12 @@ onMounted(() => {
 });
 
 const isLoggedIn = computed(() => user.value?.loggedIn || false);
-const userName = computed(() => user.value?.name || "");
+const userName = computed(() => {
+  const name = user.value?.name || user.value?.username;
+  if (name) return name;
+  if (user.value?.email) return user.value.email.split("@")[0];
+  return "ผู้ใช้";
+});
 const userRole = computed(() => user.value?.role || "");
 const cartCount = computed(() => cart.value.length);
 
