@@ -105,6 +105,7 @@ const createReceipt = {
   },
 };
 
+
 module.exports = {
   getAllReceipts,
   getReceiptById,

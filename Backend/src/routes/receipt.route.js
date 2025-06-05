@@ -16,4 +16,5 @@ module.exports = [
     path: "/receipts",
     options: receiptController.createReceipt,
   },
+  
 ];
