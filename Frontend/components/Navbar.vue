@@ -119,6 +119,13 @@
           class="absolute -ml-15 mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
           ref="dropdown"
         >
+          <nuxt-link
+            v-if="userRole !== 'admin'"
+            to="/OrderHistory"
+            class="block px-4 py-2 hover:bg-amber-200 rounded-lg transition duration-200"
+          >
+            ประวัติการสั่งซื้อ
+          </nuxt-link>
           <button
             @click="logout"
             class="w-full text-left px-4 py-2 hover:bg-amber-200 rounded-lg transition duration-200 flex items-center cursor-pointer"
@@ -241,7 +248,6 @@ onMounted(() => {
       if (newUser) {
         const parsedUser = JSON.parse(newUser);
         if (user.value?.loggedIn !== parsedUser.loggedIn) {
-          // ตรวจสอบการเปลี่ยนแปลงสถานะล็อกอิน
           if (parsedUser.loggedIn) {
             Toast.fire({
               icon: "success",
@@ -268,8 +274,7 @@ onMounted(() => {
     }
   };
   document.addEventListener("click", handleClickOutside);
-  
-  
+
   onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
     $event.off("cart-updated");
@@ -291,7 +296,7 @@ const handleCartClick = () => {
       icon: "warning",
       title: "กรุณาเข้าสู่ระบบ",
       text: "คุณต้องล็อกอินก่อนใช้งานตะกร้า",
-      confirmButtonColor: "#f59e0b", 
+      confirmButtonColor: "#f59e0b",
       confirmButtonText: "ไปที่หน้าล็อกอิน",
     }).then((result) => {
       if (result.isConfirmed) {

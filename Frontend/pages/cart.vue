@@ -76,85 +76,90 @@
   </template>
 
   <script setup>
-  import { computed, onMounted, ref } from 'vue';
-  import { useRouter } from 'vue-router';
-  import Swal from 'sweetalert2';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import Swal from 'sweetalert2';
 
-  const router = useRouter();
-  const cart = ref([]);
-  const isLoading = ref(false);
+const router = useRouter();
+const cart = ref([]);
+const isLoading = ref(false);
 
-  // กำหนดค่า Toast
-  const Toast = Swal.mixin({
-    toast: true,
-    position: "top-end",
-    showConfirmButton: false,
-    timer: 1500,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-      toast.onmouseenter = Swal.stopTimer;
-      toast.onmouseleave = Swal.resumeTimer;
-    }
-  });
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 1500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  },
+});
 
-  onMounted(() => {
-    if (process.client) {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      if (!user.loggedIn) {
-        router.push('/auth/login');
-        return;
-      }
-      cart.value = JSON.parse(localStorage.getItem('cart') || '[]');
-    }
-  });
-
-  // คำนวณยอดรวม
-  const totalPrice = computed(() =>
-    cart.value.reduce((total, item) => total + item.price * item.quantity, 0)
-  );
-
-  // อัปเดตจำนวนสินค้า
-  const updateQuantity = (item, change) => {
-    const newQuantity = item.quantity + change;
-    if (newQuantity <= 0) {
-      removeFromCart(item.id);
-      return;
-    }
-    if (newQuantity > item.stock) {
-      Swal.fire({
-        icon: "warning",
-        title: "สินค้าคงเหลือไม่เพียงพอ",
-        text: `คงเหลือ: ${item.stock} เล่ม`,
-        confirmButtonColor: "#f59e0b"
-      });
-      return;
-    }
-    item.quantity = newQuantity;
-    if (process.client) {
-      localStorage.setItem('cart', JSON.stringify(cart.value));
-    }
-  };
-
-  // ลบสินค้าออกจากตะกร้า
-  const removeFromCart = (id) => {
-    cart.value = cart.value.filter(item => item.id !== id);
-    if (process.client) {
-      localStorage.setItem('cart', JSON.stringify(cart.value));
-    }
-  };
-
-  // ดำเนินการชำระเงิน
-  const proceedToCheckout = async () => {
+onMounted(() => {
   if (process.client) {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!user.loggedIn) {
+    if (!user.loggedIn || !user.id) {
+      router.push('/auth/login');
+      return;
+    }
+    cart.value = JSON.parse(localStorage.getItem('cart') || '[]');
+  }
+});
+
+const totalPrice = computed(() =>
+  cart.value.reduce((total, item) => total + item.price * item.quantity, 0)
+);
+
+const updateQuantity = (item, change) => {
+  const newQuantity = item.quantity + change;
+  if (newQuantity <= 0) {
+    removeFromCart(item.id);
+    return;
+  }
+  if (newQuantity > item.stock) {
+    Swal.fire({
+      icon: "warning",
+      title: "สินค้าคงเหลือไม่เพียงพอ",
+      text: `คงเหลือ: ${item.stock} เล่ม`,
+      confirmButtonColor: "#f59e0b",
+    });
+    return;
+  }
+  item.quantity = newQuantity;
+  if (process.client) {
+    localStorage.setItem('cart', JSON.stringify(cart.value));
+  }
+};
+
+const removeFromCart = (id) => {
+  cart.value = cart.value.filter(item => item.id !== id);
+  if (process.client) {
+    localStorage.setItem('cart', JSON.stringify(cart.value));
+  }
+};
+
+const proceedToCheckout = async () => {
+  if (process.client) {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!user.loggedIn || !user.id) {
       Swal.fire({
         icon: "warning",
         title: "กรุณาเข้าสู่ระบบ",
         text: "คุณต้องล็อกอินก่อนดำเนินการชำระเงิน",
-        confirmButtonColor: "#f59e0b"
+        confirmButtonColor: "#f59e0b",
       });
       router.push('/auth/login');
+      return;
+    }
+
+    if (totalPrice.value <= 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "ยอดรวมไม่ถูกต้อง",
+        text: "ยอดรวมต้องมากกว่า 0",
+        confirmButtonColor: "#f59e0b",
+      });
       return;
     }
 
@@ -162,9 +167,8 @@
     let orderId = null;
     try {
       const orderData = {
-        user_id: user.id,
-        total_price: totalPrice.value,
-        status: "PENDING",
+        user_id: Number(user.id),
+        total_price: Number(totalPrice.value),
       };
 
       console.log("Sending order data:", orderData);
@@ -176,9 +180,20 @@
       orderId = orderResponse.order.id;
       console.log('Created Order ID:', orderId);
 
-      // แปลงประเภทข้อมูลใน cart ก่อนส่ง
+      // สร้างใบเสร็จ (receipt)
+      const receiptNumber = `REC-${orderId}-${Date.now()}`;
+      await $fetch('http://localhost:3000/receipts', {
+        method: 'POST',
+        body: {
+          order_id: orderId,
+          receipt_number: receiptNumber,
+          total_amount: Number(totalPrice.value),
+          issued_at: new Date().toISOString(),
+        },
+      });
+
+      // สร้าง orderDetails
       const processedCart = cart.value.map(item => ({
-        ...item,
         id: Number(item.id),
         price: Number(item.price),
         quantity: Number(item.quantity),
@@ -189,9 +204,6 @@
       for (const item of processedCart) {
         if (!item.id || !item.quantity || !item.price) {
           throw new Error(`Invalid cart item: ${JSON.stringify(item)}`);
-        }
-        if (typeof item.id !== 'number' || typeof item.quantity !== 'number' || typeof item.price !== 'number') {
-          throw new Error(`Invalid data type in cart item: ${JSON.stringify(item)}`);
         }
         if (item.quantity <= 0 || item.price <= 0) {
           throw new Error(`Invalid quantity or price in cart item: ${JSON.stringify(item)}`);
@@ -215,11 +227,11 @@
 
       Toast.fire({
         icon: "success",
-        title: "สั่งซื้อสำเร็จ"
+        title: "สั่งซื้อสำเร็จ",
       });
       cart.value = [];
       localStorage.setItem('cart', JSON.stringify(cart.value));
-      router.push('/');
+      router.push('/'); // เปลี่ยนไปหน้า OrderHistory.vue
     } catch (error) {
       console.error('Error during checkout:', error);
       if (orderId) {
@@ -235,8 +247,8 @@
       Swal.fire({
         icon: "error",
         title: "ข้อผิดพลาด",
-        text: "เกิดข้อผิดพลาดในการสั่งซื้อ: " + (error.message || 'Unknown error'),
-        confirmButtonColor: "#f59e0b"
+        text: error.message || "เกิดข้อผิดพลาดในการสั่งซื้อ",
+        confirmButtonColor: "#f59e0b",
       });
     } finally {
       isLoading.value = false;
