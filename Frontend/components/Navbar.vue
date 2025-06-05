@@ -4,6 +4,7 @@
   >
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">
+      <button class="cursor-pointer" @click="router.push('/')">
       <div class="w-15 h-15 shadow-lg rounded-full overflow-hidden">
         <img
           src="/images/Logo.jpg"
@@ -11,6 +12,7 @@
           class="w-full h-full object-cover"
         />
       </div>
+      </button>
       <span class="ml-4 text-lg font-semibold whitespace-nowrap drop-shadow">
         ร้านที่รวบรวมหนังสือน้อยที่สุดในประเทศไทย
         <img
@@ -116,7 +118,7 @@
         <!-- Dropdown เมนู -->
         <div
           v-if="isDropdownOpen"
-          class="absolute -ml-15 mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
+          class="absolute -right-9 ml-15 mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
           ref="dropdown"
         >
           <nuxt-link
