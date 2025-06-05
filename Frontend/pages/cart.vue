@@ -161,13 +161,13 @@
     isLoading.value = true;
     let orderId = null;
     try {
-      // ส่งข้อมูลตะกร้าไปสร้าง Order ใน backend
       const orderData = {
         user_id: user.id,
         total_price: totalPrice.value,
-        status: "pending",
+        status: "PENDING",
       };
 
+      console.log("Sending order data:", orderData);
       const orderResponse = await $fetch('http://localhost:3000/orders', {
         method: 'POST',
         body: orderData,
@@ -176,9 +176,17 @@
       orderId = orderResponse.order.id;
       console.log('Created Order ID:', orderId);
 
-      // ตรวจสอบข้อมูลใน cart ก่อนส่ง
-      console.log('Cart items before sending to order-details:', cart.value);
-      for (const item of cart.value) {
+      // แปลงประเภทข้อมูลใน cart ก่อนส่ง
+      const processedCart = cart.value.map(item => ({
+        ...item,
+        id: Number(item.id),
+        price: Number(item.price),
+        quantity: Number(item.quantity),
+        stock: Number(item.stock),
+      }));
+
+      console.log('Processed cart items:', processedCart);
+      for (const item of processedCart) {
         if (!item.id || !item.quantity || !item.price) {
           throw new Error(`Invalid cart item: ${JSON.stringify(item)}`);
         }
@@ -189,20 +197,18 @@
           throw new Error(`Invalid quantity or price in cart item: ${JSON.stringify(item)}`);
         }
 
-        // ตรวจสอบสต็อกก่อนส่ง
         const bookResponse = await $fetch(`http://localhost:3000/books/${item.id}`);
         if (!bookResponse.stock || bookResponse.stock.quantity < item.quantity) {
           throw new Error(`Insufficient stock for book: ${item.title}. Available: ${bookResponse.stock?.quantity || 0}`);
         }
 
-        // ส่งคำขอไปยัง /order-details
         await $fetch('http://localhost:3000/order-details', {
           method: 'POST',
           body: {
             order_id: orderId,
-            book_id: Number(item.id),
-            quantity: Number(item.quantity),
-            price: Number(item.price),
+            book_id: item.id,
+            quantity: item.quantity,
+            price: item.price,
           },
         });
       }
@@ -216,7 +222,6 @@
       router.push('/');
     } catch (error) {
       console.error('Error during checkout:', error);
-      // หากมี orderId ให้ลบ Order เพื่อป้องกันข้อมูลไม่สมบูรณ์
       if (orderId) {
         try {
           await $fetch(`http://localhost:3000/orders/${orderId}`, {
