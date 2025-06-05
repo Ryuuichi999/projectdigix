@@ -73,7 +73,7 @@ const createOrder = {
   auth: false,
   validate: { payload: validateZod(createOrderSchema) },
   handler: async (request, h) => {
-    const { user_id, total_price } = request.payload; // เอา status ออก
+    const { user_id, total_price } = request.payload;
     try {
       const user = await prisma.user.findUnique({ where: { id: user_id } });
       if (!user) return h.response({ message: "User not found" }).code(404);
@@ -82,17 +82,15 @@ const createOrder = {
         data: {
           user_id,
           total_price,
-          status: "PENDING", // กำหนดสถานะเริ่มต้นเอง
+          status: "PENDING",
         },
         include: { user: true },
       });
 
-      return h
-        .response({ message: "Order created", order: newOrder })
-        .code(201);
+      return h.response({ message: "Order created successfully", order: newOrder }).code(201);
     } catch (error) {
       console.error("Error creating order:", error);
-      return h.response({ message: "Internal server error" }).code(500);
+      return h.response({ message: `Failed to create order: ${error.message}` }).code(500);
     }
   },
 };
@@ -351,6 +349,75 @@ const deleteOrderDetail = {
   },
 };
 
+const getOrdersByUserId = {
+  description: "Get orders by user ID",
+  tags: ["api", "order"],
+  auth: false, // ถ้าต้องการ auth เปลี่ยนเป็น "jwt" และตรวจสอบ token
+  validate: { params: validateZod(idParamSchema) },
+  handler: async (request, h) => {
+    const { id } = request.params;
+    try {
+      const orders = await prisma.order.findMany({
+        where: {
+          user_id: Number(id),
+          receipt: { isNot: null }, // กรองเฉพาะที่มี receipt
+        },
+        include: {
+          user: true,
+          orderDetails: { include: { book: true } },
+          receipt: true,
+        },
+        orderBy: { created_at: "desc" },
+      });
+      return h.response(orders).code(200);
+    } catch (error) {
+      console.error("Error fetching user orders:", error);
+      return h.response({ message: `Failed to fetch orders: ${error.message}` }).code(500);
+    }
+  },
+};
+
+const createReceipt = {
+  description: "Create receipt",
+  tags: ["api", "receipt"],
+  auth: false,
+  validate: {
+    payload: z.object({
+      order_id: z.number().int().positive(),
+      receipt_number: z.string().min(1),
+      total_amount: z.number().positive(),
+      issued_at: z.string().datetime(),
+    }).parseAsync,
+  },
+  handler: async (request, h) => {
+    const { order_id, receipt_number, total_amount, issued_at } = request.payload;
+    try {
+      const order = await prisma.order.findUnique({ where: { id: order_id } });
+      if (!order) return h.response({ message: "Order not found" }).code(404);
+
+      const existingReceipt = await prisma.receipt.findUnique({ where: { order_id } });
+      if (existingReceipt) return h.response({ message: "Receipt already exists for this order" }).code(400);
+
+      const newReceipt = await prisma.receipt.create({
+        data: {
+          order_id,
+          receipt_number,
+          total_amount,
+          issued_at: new Date(issued_at),
+        },
+      });
+
+      return h.response({
+        message: "Receipt created",
+        receipt: newReceipt,
+      }).code(201);
+    } catch (error) {
+      console.error("Error creating receipt:", error);
+      return h.response({ message: `Failed to create receipt: ${error.message}` }).code(500);
+    }
+  },
+}; 
+
 module.exports = {
   getAllOrders,
   getOrderById,
@@ -362,4 +429,6 @@ module.exports = {
   createOrderDetail,
   updateOrderDetail,
   deleteOrderDetail,
+  getOrdersByUserId,
+  createReceipt,
 };
