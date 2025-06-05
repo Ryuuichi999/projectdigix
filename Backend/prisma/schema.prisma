@@ -51,7 +51,7 @@ model Order {
   updated_at  DateTime    @updatedAt
 
   user         User          @relation(fields: [user_id], references: [id])
-  orderDetails OrderDetail[]
+  orderDetails OrderDetail[] 
   receipt      Receipt?
 }
 
@@ -66,12 +66,21 @@ model OrderDetail {
   book  Book  @relation(fields: [book_id], references: [id])
 }
 
-model Stock {
-  id       Int @id @default(autoincrement())
-  book_id  Int @unique
-  quantity Int @default(0)
+model StockHistory {
+  id         Int      @id @default(autoincrement())
+  stock_id   Int
+  change     Int
+  reason     String
+  created_at DateTime @default(now())
+  stock      Stock    @relation(fields: [stock_id], references: [id])
+}
 
-  book Book @relation(fields: [book_id], references: [id], onDelete: Cascade)
+model Stock {
+  id         Int           @id @default(autoincrement())
+  book_id    Int           @unique
+  quantity   Int
+  book       Book          @relation(fields: [book_id], references: [id])
+  history    StockHistory[] @relation
 }
 
 model Category {

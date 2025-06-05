@@ -73,8 +73,7 @@ const createOrder = {
   auth: false,
   validate: { payload: validateZod(createOrderSchema) },
   handler: async (request, h) => {
-    const { user_id, total_price, status } = request.payload;
-
+    const { user_id, total_price } = request.payload; // เอา status ออก
     try {
       const user = await prisma.user.findUnique({ where: { id: user_id } });
       if (!user) return h.response({ message: "User not found" }).code(404);
@@ -83,16 +82,13 @@ const createOrder = {
         data: {
           user_id,
           total_price,
-          status,
+          status: "PENDING", // กำหนดสถานะเริ่มต้นเอง
         },
         include: { user: true },
       });
 
       return h
-        .response({
-          message: "Order created",
-          order: newOrder,
-        })
+        .response({ message: "Order created", order: newOrder })
         .code(201);
     } catch (error) {
       console.error("Error creating order:", error);
@@ -113,7 +109,9 @@ const updateOrder = {
     const { id } = request.params;
     const { status } = request.payload;
     try {
-      const order = await prisma.order.findUnique({ where: { id: Number(id) } });
+      const order = await prisma.order.findUnique({
+        where: { id: Number(id) },
+      });
       if (!order) return h.response({ message: "Order not found" }).code(404);
 
       const updatedOrder = await prisma.order.update({
@@ -143,14 +141,48 @@ const deleteOrder = {
   handler: async (request, h) => {
     const { id } = request.params;
     try {
-      const order = await prisma.order.findUnique({ where: { id: Number(id) } });
+      // Check if order exists
+      const order = await prisma.order.findUnique({
+        where: { id: Number(id) },
+        include: { orderDetails: true, receipt: true }, // Include related data
+      });
       if (!order) return h.response({ message: "Order not found" }).code(404);
 
-      await prisma.order.delete({ where: { id: Number(id) } });
-      return h.response({ message: "Order deleted" }).code(200);
+      // Start a transaction
+      await prisma.$transaction(async (prisma) => {
+        // Delete associated orderDetails and update stock
+        for (const detail of order.orderDetails) {
+          const stock = await prisma.stock.findUnique({
+            where: { book_id: detail.book_id },
+          });
+          if (stock) {
+            await prisma.stock.update({
+              where: { book_id: detail.book_id },
+              data: { quantity: stock.quantity + detail.quantity },
+            });
+          }
+          await prisma.orderDetail.delete({
+            where: { id: detail.id },
+          });
+        }
+
+        // Delete associated receipt (if any)
+        if (order.receipt) {
+          await prisma.receipt.delete({
+            where: { id: order.receipt.id },
+          });
+        }
+
+        // Delete the order
+        await prisma.order.delete({
+          where: { id: Number(id) },
+        });
+      });
+
+      return h.response({ message: "Order deleted successfully" }).code(200);
     } catch (error) {
       console.error("Error deleting order:", error);
-      return h.response({ message: "Failed to delete order" }).code(500);
+      return h.response({ message: `Failed to delete order: ${error.message}` }).code(500);
     }
   },
 };
@@ -184,7 +216,8 @@ const getOrderDetailById = {
         where: { id: Number(id) },
         include: { order: true, book: true },
       });
-      if (!orderDetail) return h.response({ message: "Order detail not found" }).code(404);
+      if (!orderDetail)
+        return h.response({ message: "Order detail not found" }).code(404);
       return h.response(orderDetail).code(200);
     } catch (error) {
       console.error("Error fetching order detail:", error);
@@ -213,31 +246,26 @@ const createOrderDetail = {
         return h.response({ message: `Insufficient stock for book ID ${book_id}. Available: ${stock?.quantity || 0}` }).code(400);
       }
 
-      const newOrderDetail = await prisma.orderDetail.create({
-        data: {
-          order_id,
-          book_id,
-          quantity,
-          price,
-        },
-      });
+      const [newOrderDetail, updatedStock] = await prisma.$transaction([
+        prisma.orderDetail.create({
+          data: { order_id, book_id, quantity, price },
+        }),
+        prisma.stock.update({
+          where: { book_id },
+          data: { quantity: stock.quantity - quantity },
+        }),
+      ]);
 
-      await prisma.stock.update({
-        where: { book_id },
-        data: { quantity: stock.quantity - quantity },
-      });
+      return h.response({
+        message: "Order detail created",
+        orderDetail: newOrderDetail,
+      }).code(201);
 
-      return h
-        .response({
-          message: "Order detail created",
-          orderDetail: newOrderDetail,
-        })
-        .code(201);
     } catch (error) {
       console.error("Error creating order detail:", error);
       return h.response({ message: "Internal server error" }).code(500);
     }
-  },
+  }
 };
 
 const updateOrderDetail = {
@@ -248,7 +276,7 @@ const updateOrderDetail = {
     params: validateZod(idParamSchema),
     payload: validateZod(createOrderDetailSchema.partial()),
   },
-  handler: async (request, h) => {
+   handler: async (request, h) => {
     const { id } = request.params;
     const { quantity, price } = request.payload;
 
@@ -257,11 +285,14 @@ const updateOrderDetail = {
       if (!orderDetail) return h.response({ message: "Order detail not found" }).code(404);
 
       const stock = await prisma.stock.findUnique({ where: { book_id: orderDetail.book_id } });
+
       if (quantity !== undefined) {
         const quantityDiff = quantity - orderDetail.quantity;
-        if (stock.quantity < quantityDiff) {
+
+        if (quantityDiff > 0 && stock.quantity < quantityDiff) {
           return h.response({ message: `Insufficient stock. Available: ${stock.quantity}` }).code(400);
         }
+
         await prisma.stock.update({
           where: { book_id: orderDetail.book_id },
           data: { quantity: stock.quantity - quantityDiff },
@@ -277,17 +308,15 @@ const updateOrderDetail = {
         include: { book: true },
       });
 
-      return h
-        .response({
-          message: "Order detail updated",
-          orderDetail: updatedOrderDetail,
-        })
-        .code(200);
+      return h.response({
+        message: "Order detail updated",
+        orderDetail: updatedOrderDetail,
+      }).code(200);
     } catch (error) {
       console.error("Error updating order detail:", error);
       return h.response({ message: "Failed to update order detail" }).code(500);
     }
-  },
+  }
 };
 
 const deleteOrderDetail = {
@@ -298,11 +327,16 @@ const deleteOrderDetail = {
   handler: async (request, h) => {
     const { id } = request.params;
     try {
-      const orderDetail = await prisma.orderDetail.findUnique({ where: { id: Number(id) } });
-      if (!orderDetail) return h.response({ message: "Order detail not found" }).code(404);
+      const orderDetail = await prisma.orderDetail.findUnique({
+        where: { id: Number(id) },
+      });
+      if (!orderDetail)
+        return h.response({ message: "Order detail not found" }).code(404);
 
       // คืนสต็อก
-      const stock = await prisma.stock.findUnique({ where: { book_id: orderDetail.book_id } });
+      const stock = await prisma.stock.findUnique({
+        where: { book_id: orderDetail.book_id },
+      });
       await prisma.stock.update({
         where: { book_id: orderDetail.book_id },
         data: { quantity: stock.quantity + orderDetail.quantity },
