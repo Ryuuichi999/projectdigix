@@ -1,15 +1,85 @@
 <template>
-  <section class="py-2 max-w-5xl mx-auto">
-    <h2 class="text-xl font-semibold mb-4">หนังสือทั้งหมด</h2>
+  <section class="py-6 max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-semibold text-gray-800">หนังสือทั้งหมด</h2>
+      <div class="flex space-x-4">
+        <!-- Filter by Category -->
+        <div class="relative">
+          <select
+            v-model="selectedCategory"
+            @change="filterBooks"
+            class="appearance-none bg-gradient-to-r from-amber-400 to-amber-500 text-white text-sm font-semibold py-2.5 px-4 pr-8 rounded-full shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 transform hover:scale-105 cursor-pointer"
+          >
+            <option value="">ทุกหมวดหมู่</option>
+            <option
+              v-for="category in categories"
+              :key="category.id"
+              :value="category.id"
+            >
+              {{ category.category_name }}
+            </option>
+          </select>
+          <div
+            class="absolute inset-y-0 right-3 flex items-center pointer-events-none"
+          >
+            <svg
+              class="w-4 h-4 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </div>
+        <!-- Sort By -->
+        <div class="relative">
+          <select
+            v-model="sortBy"
+            @change="sortBooks"
+            class="appearance-none bg-gradient-to-r from-rose-500 to-rose-600 text-white text-sm font-semibold py-2.5 px-4 pr-8 rounded-full shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-rose-300 transition-all duration-300 transform hover:scale-105 cursor-pointer"
+          >
+            <option value="title-asc">ชื่อ: A-Z</option>
+            <option value="title-desc">ชื่อ: Z-A</option>
+            <option value="price-asc">ราคา: ต่ำ-สูง</option>
+            <option value="price-desc">ราคา: สูง-ต่ำ</option>
+            <option value="stock-asc">สต็อก: น้อย-มาก</option>
+            <option value="stock-desc">สต็อก: มาก-น้อย</option>
+          </select>
+          <div
+            class="absolute inset-y-0 right-3 flex items-center pointer-events-none"
+          >
+            <svg
+              class="w-4 h-4 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
     <div
       id="book-list"
       class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
     >
       <nuxt-link
-        v-for="book in books"
+        v-for="book in filteredBooks"
         :key="book.id"
         :to="`/book/${book.id}`"
-        :id="book.id ? `book-${book.id}` : `book-unknown`"
+        :id="`book-${book.id}`"
         class="bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-200 hover:border-amber-300 group"
       >
         <div class="relative">
@@ -25,20 +95,15 @@
             หมด
           </div>
         </div>
-
         <h3 class="text-lg font-semibold mt-2">{{ book.title }}</h3>
-        <p class="text-sm ext-gray-500">คงเหลือ: {{ book.stock }} เล่ม</p>
-
+        <p class="text-sm text-gray-500">คงเหลือ: {{ book.stock }} เล่ม</p>
         <div class="flex items-center justify-between mt-2">
           <p class="text-red-600 font-bold text-sm">{{ book.price || 0 }}฿</p>
-
-          <!-- ปุ่มใส่ตะกร้า -->
           <button
             @click.prevent="addToCart(book)"
-            class="flex items-center gap-1 cursor-pointer bg-amber-400 hover:bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded transition relative"
+            class="flex items-center gap-1 cursor-pointer bg-amber-400 hover:bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded transition"
             :class="{ 'bg-green-500 hover:bg-green-600': addedBooks[book.id] }"
           >
-            <!-- รูปไอคอนตะกร้า -->
             <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-6 h-6" />
             <span v-if="!addedBooks[book.id]">ใส่ตะกร้า</span>
             <span v-else class="flex items-center">
@@ -61,7 +126,7 @@
         </div>
       </nuxt-link>
       <div
-        v-if="books.length === 0"
+        v-if="filteredBooks.length === 0"
         class="col-span-full text-center text-gray-500"
       >
         ไม่พบหนังสือ
@@ -79,7 +144,6 @@ import Swal from "sweetalert2";
 const router = useRouter();
 const { $event } = useNuxtApp();
 
-// กำหนดค่า Toast
 const Toast = Swal.mixin({
   toast: true,
   position: "top-end",
@@ -92,13 +156,13 @@ const Toast = Swal.mixin({
   },
 });
 
-// สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
 const addedBooks = ref({});
-
-// สถานะสำหรับเก็บรายการหนังสือ
 const books = ref([]);
+const filteredBooks = ref([]);
+const categories = ref([]);
+const selectedCategory = ref("");
+const sortBy = ref("title-asc");
 
-// ดึงข้อมูลหนังสือจาก API
 const fetchBooks = async () => {
   try {
     const response = await $fetch("http://localhost:3000/books");
@@ -109,16 +173,58 @@ const fetchBooks = async () => {
       image: book.image || "/images/default-book.jpg",
       stock: book.stock?.quantity ?? 0,
       category: book.categories?.[0]?.category?.category_name || "ไม่ระบุ",
+      categoryId: book.categories?.[0]?.category?.id || null,
     }));
+    filteredBooks.value = [...books.value];
+    sortBooks();
   } catch (error) {
     console.error("Error fetching books:", error);
     books.value = [];
+    filteredBooks.value = [];
   }
 };
 
-// เรียก API เมื่อ component ถูก mount
+const fetchCategories = async () => {
+  try {
+    const response = await $fetch("http://localhost:3000/categories");
+    categories.value = response.map((category) => ({
+      id: category.id,
+      category_name: category.category_name,
+    }));
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    categories.value = [];
+  }
+};
+
+const filterBooks = () => {
+  filteredBooks.value = books.value.filter((book) =>
+    selectedCategory.value
+      ? book.categoryId === Number(selectedCategory.value)
+      : true
+  );
+  sortBooks();
+};
+
+const sortBooks = () => {
+  const [field, order] = sortBy.value.split("-");
+  filteredBooks.value.sort((a, b) => {
+    if (field === "title") {
+      return order === "asc"
+        ? a.title.localeCompare(b.title)
+        : b.title.localeCompare(a.title);
+    } else if (field === "price") {
+      return order === "asc" ? a.price - b.price : b.price - a.price;
+    } else if (field === "stock") {
+      return order === "asc" ? a.stock - b.stock : b.stock - a.stock;
+    }
+    return 0;
+  });
+};
+
 onMounted(() => {
   fetchBooks();
+  fetchCategories();
 });
 
 const addToCart = (book) => {
@@ -139,7 +245,6 @@ const addToCart = (book) => {
     const existingItem = cart.find((item) => item.id === book.id);
 
     if (existingItem) {
-      // ตรวจสอบสต็อกก่อนเพิ่มจำนวน
       if (existingItem.quantity >= book.stock) {
         Swal.fire({
           icon: "warning",
@@ -151,7 +256,6 @@ const addToCart = (book) => {
       }
       existingItem.quantity += 1;
     } else {
-      // ตรวจสอบว่ามีสต็อกหรือไม่
       if (book.stock <= 0) {
         Swal.fire({
           icon: "warning",
@@ -172,16 +276,11 @@ const addToCart = (book) => {
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
-
-    // อัปเดตสถานะว่าเพิ่มแล้ว
     addedBooks.value[book.id] = true;
     setTimeout(() => {
       addedBooks.value[book.id] = false;
     }, 2000);
-
-    // ส่ง event เพื่ออัปเดตตะกร้าใน Navbar
     $event.emit("cart-updated");
-
     Toast.fire({
       icon: "success",
       title: "เพิ่มสินค้าในตะกร้าสำเร็จ",
@@ -189,3 +288,27 @@ const addToCart = (book) => {
   }
 };
 </script>
+
+<style scoped>
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+select option {
+  color: #1f2937;
+  background-color: #ffffff;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+select option:hover,
+select option:focus,
+select option:checked {
+  color: #1f2937;
+}
+</style>

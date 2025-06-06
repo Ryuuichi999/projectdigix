@@ -7,7 +7,6 @@ definePageMeta({
 <template>
   <div class="bg-amber-50 min-h-screen">
     <Banner />
-    <CategoryList />
     <div id="book-list" class="p-6">
       <BookList />
     </div>

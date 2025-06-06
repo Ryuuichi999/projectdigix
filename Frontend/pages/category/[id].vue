@@ -1,75 +1,3 @@
-<template>
-  <div class="bg-amber-50 min-h-screen">
-    <section class="py-8 max-w-5xl mx-auto">
-      <NuxtLink to="/" class="text-sm text-blue-500 hover:underline mb-4 block">
-        ← ย้อนกลับ
-      </NuxtLink>
-      <h2 class="text-xl font-semibold mb-4">หมวดหมู่: {{ categoryName }}</h2>
-      <div
-        v-if="filteredBooks.length"
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-      >
-        <nuxt-link
-          v-for="book in filteredBooks"
-          :key="book.id"
-          :to="`/book/${book.id}`"
-          class="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-200 hover:border-amber-300 group"
-        >
-          <div class="relative">
-            <img
-              :src="book.image"
-              alt="Book"
-              class="w-full aspect-[3/4] object-cover rounded"
-            />
-            <div
-              v-if="book.stock <= 0"
-              class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-xl font-bold rounded"
-            >
-              หมด
-            </div>
-          </div>
-
-          <h3 class="text-lg font-semibold mt-2">{{ book.title }}</h3>
-          <p class="text-sm text-red-400 font-bold">คงเหลือ: {{ book.stock }} เล่ม</p>
-
-          <div class="flex items-center justify-between mt-2">
-            <p class="text-red-600 font-bold text-sm">{{ book.price || 0 }}฿</p>
-            <button
-              @click.prevent="addToCart(book)"
-              class="flex items-center cursor-pointer gap-1 bg-amber-400 hover:bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded transition"
-              :class="{
-                'bg-green-500 hover:bg-green-600': addedBooks[book.id],
-              }"
-            >
-              <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-6 h-6" />
-              <span v-if="!addedBooks[book.id]">ใส่ตะกร้า</span>
-              <span v-else class="flex items-center">
-                เพิ่มแล้ว
-                <svg
-                  class="w-4 h-4 ml-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  stroke-width="2"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </span>
-            </button>
-          </div>
-        </nuxt-link>
-      </div>
-      <p v-else class="text-center text-gray-500 mt-12">
-        ไม่พบหนังสือในหมวดหมู่ {{ categoryName }}
-      </p>
-    </section>
-  </div>
-</template>
-
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -116,7 +44,7 @@ const fetchBooks = async () => {
     }
 
     const response = await $fetch("http://localhost:3000/books");
-    console.log("API Response from /books:", response); // Log เพื่อตรวจสอบข้อมูล
+    console.log("API Response from /books:", response); 
     if (!response || !Array.isArray(response)) {
       categoryName.value = "ไม่ทราบหมวดหมู่";
       allBooks.value = [];
@@ -219,3 +147,76 @@ onMounted(() => {
   fetchBooks();
 });
 </script>
+
+<template>
+  <div class="bg-amber-50 min-h-screen">
+    <section class="py-8 max-w-5xl mx-auto">
+      <NuxtLink to="/" class="text-sm text-blue-500 hover:underline mb-4 block">
+        ← ย้อนกลับ
+      </NuxtLink>
+      <h2 class="text-xl font-semibold mb-4">หมวดหมู่: {{ categoryName }}</h2>
+      <div
+        v-if="filteredBooks.length"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+      >
+        <nuxt-link
+          v-for="book in filteredBooks"
+          :key="book.id"
+          :to="`/book/${book.id}`"
+          class="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-200 hover:border-amber-300 group"
+        >
+          <div class="relative">
+            <img
+              :src="book.image"
+              alt="Book"
+              class="w-full aspect-[3/4] object-cover rounded"
+            />
+            <div
+              v-if="book.stock <= 0"
+              class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-xl font-bold rounded"
+            >
+              หมด
+            </div>
+          </div>
+
+          <h3 class="text-lg font-semibold mt-2">{{ book.title }}</h3>
+          <p class="text-sm text-red-400 font-bold">คงเหลือ: {{ book.stock }} เล่ม</p>
+
+          <div class="flex items-center justify-between mt-2">
+            <p class="text-red-600 font-bold text-sm">{{ book.price || 0 }}฿</p>
+            <button
+              @click.prevent="addToCart(book)"
+              class="flex items-center cursor-pointer gap-1 bg-amber-400 hover:bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded transition"
+              :class="{
+                'bg-green-500 hover:bg-green-600': addedBooks[book.id],
+              }"
+            >
+              <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-6 h-6" />
+              <span v-if="!addedBooks[book.id]">ใส่ตะกร้า</span>
+              <span v-else class="flex items-center">
+                เพิ่มแล้ว
+                <svg
+                  class="w-4 h-4 ml-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </span>
+            </button>
+          </div>
+        </nuxt-link>
+      </div>
+      <p v-else class="text-center text-gray-500 mt-12">
+        ไม่พบหนังสือในหมวดหมู่ {{ categoryName }}
+      </p>
+    </section>
+  </div>
+</template>
+

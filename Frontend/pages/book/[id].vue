@@ -1,3 +1,81 @@
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useNuxtApp } from 'nuxt/app';
+
+const route = useRoute();
+const router = useRouter();
+const { $event } = useNuxtApp();
+const bookId = parseInt(route.params.id);
+
+// สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
+const isAdded = ref(false);
+
+// สถานะสำหรับเก็บข้อมูลหนังสือ
+const book = ref(null);
+
+// ฟังก์ชันสำหรับฟอร์แมตวันที่
+const formatDate = (dateString) => {
+  if (!dateString) return 'ไม่ระบุ';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0]; 
+};
+
+// ดึงข้อมูลหนังสือจาก API
+const fetchBook = async () => {
+  try {
+    const response = await $fetch(`http://localhost:3000/books/${bookId}`);
+    if (!response) {
+      book.value = null;
+      return;
+    }
+    // ปรับโครงสร้างข้อมูลให้สอดคล้องกับ frontend
+    book.value = {
+      ...response,
+      category: response.categories?.[0]?.category?.category_name || 'ไม่ระบุ',
+      stock: response.stock?.quantity ?? 0, 
+      publisher: response.publisher || 'ไม่ระบุ',
+    };
+  } catch (error) {
+    console.error('Error fetching book:', error);
+    book.value = null;
+  }
+};
+
+// เรียก API เมื่อ component ถูก mount
+onMounted(() => {
+  fetchBook();
+});
+
+const addToCart = () => {
+  if (process.client) {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!user.loggedIn) {
+      alert('กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า');
+      router.push('/auth/login');
+      return;
+    }
+
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const existingItem = cart.find(item => item.id === book.value.id);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({ ...book.value, quantity: 1 });
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+
+    // อัปเดตสถานะว่าเพิ่มแล้ว
+    isAdded.value = true;
+    setTimeout(() => {
+      isAdded.value = false;
+    }, 500);
+
+    // ส่ง event เพื่ออัปเดตตะกร้าใน Navbar
+    $event.emit('cart-updated');
+  }
+};
+</script>
 <template >
   <div class="bg-amber-50 min-h-screen">
   <section class="max-w-6xl mx-auto p-6">
@@ -87,81 +165,3 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useNuxtApp } from 'nuxt/app';
-
-const route = useRoute();
-const router = useRouter();
-const { $event } = useNuxtApp();
-const bookId = parseInt(route.params.id);
-
-// สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
-const isAdded = ref(false);
-
-// สถานะสำหรับเก็บข้อมูลหนังสือ
-const book = ref(null);
-
-// ฟังก์ชันสำหรับฟอร์แมตวันที่
-const formatDate = (dateString) => {
-  if (!dateString) return 'ไม่ระบุ';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0]; 
-};
-
-// ดึงข้อมูลหนังสือจาก API
-const fetchBook = async () => {
-  try {
-    const response = await $fetch(`http://localhost:3000/books/${bookId}`);
-    if (!response) {
-      book.value = null;
-      return;
-    }
-    // ปรับโครงสร้างข้อมูลให้สอดคล้องกับ frontend
-    book.value = {
-      ...response,
-      category: response.categories?.[0]?.category?.category_name || 'ไม่ระบุ',
-      stock: response.stock?.quantity ?? 0, 
-      publisher: response.publisher || 'ไม่ระบุ',
-    };
-  } catch (error) {
-    console.error('Error fetching book:', error);
-    book.value = null;
-  }
-};
-
-// เรียก API เมื่อ component ถูก mount
-onMounted(() => {
-  fetchBook();
-});
-
-const addToCart = () => {
-  if (process.client) {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!user.loggedIn) {
-      alert('กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า');
-      router.push('/auth/login');
-      return;
-    }
-
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingItem = cart.find(item => item.id === book.value.id);
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      cart.push({ ...book.value, quantity: 1 });
-    }
-    localStorage.setItem('cart', JSON.stringify(cart));
-
-    // อัปเดตสถานะว่าเพิ่มแล้ว
-    isAdded.value = true;
-    setTimeout(() => {
-      isAdded.value = false;
-    }, 500);
-
-    // ส่ง event เพื่ออัปเดตตะกร้าใน Navbar
-    $event.emit('cart-updated');
-  }
-};
-</script>
