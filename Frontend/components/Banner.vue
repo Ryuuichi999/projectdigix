@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 
 const slides = ref([
-  { image: '/images/สืบสวน.jpg', title: 'โปรโมชันพิเศษ!', description: 'ซื้อครบ 500 บาท ลด 10%'},
+  { image: '/images/สืบสวน.jpg', title: 'โปรโมชันพิเศษ!', description: 'ซื้อครบ 500 บาท แถมเจ้าของเว็บ'},
   { image: '/images/นวลนาง.jpg', title: 'หนังสือใหม่มาแรง', description: 'ค้นพบนิยายล่าสุดของเรา'},
   { image: '/images/AH.jpg', title: 'หนังสือการ์ตูนมากมาย', description: 'หนังสือการ์ตูนที่เราคิดถึง'}
 ]);

@@ -1,3 +1,188 @@
+<script setup>
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useNuxtApp } from "nuxt/app";
+import Swal from "sweetalert2";
+
+const router = useRouter();
+const { $event } = useNuxtApp();
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 1500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  },
+});
+
+const addedBooks = ref({});
+const books = ref([]);
+const filteredBooks = ref([]);
+const categories = ref([]);
+const selectedCategory = ref("");
+const sortBy = ref("title-asc");
+
+const fetchBooks = async () => {
+  try {
+    const response = await $fetch("http://localhost:3000/books");
+    books.value = response.map((book) => ({
+      id: book.id,
+      title: book.title,
+      price: book.price,
+      image: book.image || "/images/default-book.jpg",
+      stock: book.stock?.quantity ?? 0,
+      category: book.categories?.[0]?.category?.category_name || "ไม่ระบุ",
+      categoryId: book.categories?.[0]?.category?.id || null,
+    }));
+    filteredBooks.value = [...books.value];
+    sortBooks();
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    books.value = [];
+    filteredBooks.value = [];
+  }
+};
+
+const fetchCategories = async () => {
+  try {
+    const response = await $fetch("http://localhost:3000/categories");
+    categories.value = response.map((category) => ({
+      id: category.id,
+      category_name: category.category_name,
+    }));
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    categories.value = [];
+  }
+};
+
+const filterBooks = () => {
+  filteredBooks.value = books.value.filter((book) =>
+    selectedCategory.value
+      ? book.categoryId === Number(selectedCategory.value)
+      : true
+  );
+  sortBooks();
+};
+
+const sortBooks = () => {
+  const [field, order] = sortBy.value.split("-");
+  filteredBooks.value.sort((a, b) => {
+    if (field === "title") {
+      return order === "asc"
+        ? a.title.localeCompare(b.title)
+        : b.title.localeCompare(a.title);
+    } else if (field === "price") {
+      return order === "asc" ? a.price - b.price : b.price - a.price;
+    } else if (field === "stock") {
+      return order === "asc" ? a.stock - b.stock : b.stock - a.stock;
+    }
+    return 0;
+  });
+};
+
+onMounted(() => {
+  fetchBooks();
+  fetchCategories();
+});
+
+const addToCart = (book) => {
+  if (process.client) {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user.loggedIn) {
+      Swal.fire({
+        icon: "warning",
+        title: "กรุณาเข้าสู่ระบบ",
+        text: "คุณต้องเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า",
+        confirmButtonColor: "#f59e0b",
+        confirmButtonText: "ไปที่หน้าเข้าสู่ระบบ",
+        showCancelButton: true,
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push("/auth/login");
+        }
+      });
+      return;
+    }
+
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const existingItem = cart.find((item) => item.id === book.id);
+
+    if (existingItem) {
+      if (existingItem.quantity >= book.stock) {
+        Swal.fire({
+          icon: "warning",
+          title: "สินค้าคงเหลือไม่เพียงพอ",
+          text: `คงเหลือ: ${book.stock} เล่ม`,
+          confirmButtonColor: "#f59e0b",
+        });
+        return;
+      }
+      existingItem.quantity += 1;
+    } else {
+      if (book.stock <= 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "สินค้าหมด",
+          text: "ขออภัย สินค้าหมดสต็อก",
+          confirmButtonColor: "#f59e0b",
+        });
+        return;
+      }
+      cart.push({
+        id: book.id,
+        title: book.title,
+        price: book.price,
+        image: book.image,
+        stock: book.stock,
+        quantity: 1,
+      });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    addedBooks.value[book.id] = true;
+    setTimeout(() => {
+      addedBooks.value[book.id] = false;
+    }, 2000);
+    $event.emit("cart-updated");
+    Toast.fire({
+      icon: "success",
+      title: "เพิ่มสินค้าในตะกร้าสำเร็จ",
+    });
+  }
+};
+</script>
+
+<style scoped>
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+select option {
+  color: #1f2937;
+  background-color: #ffffff;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+select option:hover,
+select option:focus,
+select option:checked {
+  color: #1f2937;
+}
+</style>
+
 <template>
   <section class="py-6 max-w-5xl mx-auto">
     <div class="flex justify-between items-center mb-4">
@@ -134,181 +319,3 @@
     </div>
   </section>
 </template>
-
-<script setup>
-import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import { useNuxtApp } from "nuxt/app";
-import Swal from "sweetalert2";
-
-const router = useRouter();
-const { $event } = useNuxtApp();
-
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top-end",
-  showConfirmButton: false,
-  timer: 1500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.onmouseenter = Swal.stopTimer;
-    toast.onmouseleave = Swal.resumeTimer;
-  },
-});
-
-const addedBooks = ref({});
-const books = ref([]);
-const filteredBooks = ref([]);
-const categories = ref([]);
-const selectedCategory = ref("");
-const sortBy = ref("title-asc");
-
-const fetchBooks = async () => {
-  try {
-    const response = await $fetch("http://localhost:3000/books");
-    books.value = response.map((book) => ({
-      id: book.id,
-      title: book.title,
-      price: book.price,
-      image: book.image || "/images/default-book.jpg",
-      stock: book.stock?.quantity ?? 0,
-      category: book.categories?.[0]?.category?.category_name || "ไม่ระบุ",
-      categoryId: book.categories?.[0]?.category?.id || null,
-    }));
-    filteredBooks.value = [...books.value];
-    sortBooks();
-  } catch (error) {
-    console.error("Error fetching books:", error);
-    books.value = [];
-    filteredBooks.value = [];
-  }
-};
-
-const fetchCategories = async () => {
-  try {
-    const response = await $fetch("http://localhost:3000/categories");
-    categories.value = response.map((category) => ({
-      id: category.id,
-      category_name: category.category_name,
-    }));
-  } catch (error) {
-    console.error("Error fetching categories:", error);
-    categories.value = [];
-  }
-};
-
-const filterBooks = () => {
-  filteredBooks.value = books.value.filter((book) =>
-    selectedCategory.value
-      ? book.categoryId === Number(selectedCategory.value)
-      : true
-  );
-  sortBooks();
-};
-
-const sortBooks = () => {
-  const [field, order] = sortBy.value.split("-");
-  filteredBooks.value.sort((a, b) => {
-    if (field === "title") {
-      return order === "asc"
-        ? a.title.localeCompare(b.title)
-        : b.title.localeCompare(a.title);
-    } else if (field === "price") {
-      return order === "asc" ? a.price - b.price : b.price - a.price;
-    } else if (field === "stock") {
-      return order === "asc" ? a.stock - b.stock : b.stock - a.stock;
-    }
-    return 0;
-  });
-};
-
-onMounted(() => {
-  fetchBooks();
-  fetchCategories();
-});
-
-const addToCart = (book) => {
-  if (process.client) {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user.loggedIn) {
-      Swal.fire({
-        icon: "warning",
-        title: "กรุณาเข้าสู่ระบบ",
-        text: "คุณต้องล็อกอินก่อนเพิ่มสินค้าลงตะกร้า",
-        confirmButtonColor: "#f59e0b",
-      });
-      router.push("/auth/login");
-      return;
-    }
-
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const existingItem = cart.find((item) => item.id === book.id);
-
-    if (existingItem) {
-      if (existingItem.quantity >= book.stock) {
-        Swal.fire({
-          icon: "warning",
-          title: "สินค้าคงเหลือไม่เพียงพอ",
-          text: `คงเหลือ: ${book.stock} เล่ม`,
-          confirmButtonColor: "#f59e0b",
-        });
-        return;
-      }
-      existingItem.quantity += 1;
-    } else {
-      if (book.stock <= 0) {
-        Swal.fire({
-          icon: "warning",
-          title: "สินค้าหมด",
-          text: "ขออภัย สินค้าหมดสต็อก",
-          confirmButtonColor: "#f59e0b",
-        });
-        return;
-      }
-      cart.push({
-        id: book.id,
-        title: book.title,
-        price: book.price,
-        image: book.image,
-        stock: book.stock,
-        quantity: 1,
-      });
-    }
-
-    localStorage.setItem("cart", JSON.stringify(cart));
-    addedBooks.value[book.id] = true;
-    setTimeout(() => {
-      addedBooks.value[book.id] = false;
-    }, 2000);
-    $event.emit("cart-updated");
-    Toast.fire({
-      icon: "success",
-      title: "เพิ่มสินค้าในตะกร้าสำเร็จ",
-    });
-  }
-};
-</script>
-
-<style scoped>
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-select option {
-  color: #1f2937;
-  background-color: #ffffff;
-  font-size: 1rem;
-  padding: 0.5rem 1rem;
-}
-select option:hover,
-select option:focus,
-select option:checked {
-  color: #1f2937;
-}
-</style>

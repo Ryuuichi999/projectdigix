@@ -237,7 +237,10 @@ const logout = () => {
           </div>
         </div>
       </div>
-      <nuxt-link to="/about" class="hover:text-amber-100 transition font-semibold"
+      <nuxt-link
+        v-if="userRole !== 'admin'"
+        to="/about"
+        class="hover:text-amber-100 transition font-semibold"
         >เกี่ยวกับเรา</nuxt-link
       >
       <!-- ไอคอนตะกร้า -->
@@ -366,4 +369,3 @@ const logout = () => {
     </div>
   </nav>
 </template>
-
