@@ -175,20 +175,43 @@ const deleteUser = {
     try {
       const user = await prisma.user.findUnique({
         where: { id: Number(id) },
+        include: { orders: true }, // ตรวจสอบ orders ที่เกี่ยวข้อง
       });
 
       if (!user) {
         return h.response({ message: "User not found" }).code(404);
       }
 
+      // ตรวจสอบว่ามี orders หรือไม่
+      if (user.orders.length > 0) {
+        // ลบ orderDetails และ orders ที่เกี่ยวข้องก่อน
+        await prisma.orderDetail.deleteMany({
+          where: { order_id: { in: user.orders.map((o) => o.id) } },
+        });
+        await prisma.order.deleteMany({
+          where: { user_id: Number(id) },
+        });
+      }
+
+      // ลบ user
       await prisma.user.delete({
         where: { id: Number(id) },
       });
 
       return h.response({ message: "User deleted successfully" }).code(200);
     } catch (error) {
-      console.error("Error deleting user:", error);
-      return h.response({ message: "Failed to delete user" }).code(500);
+      console.error(`Error deleting user (id=${id}):`, error);
+      if (error.code === "P2003") {
+        return h
+          .response({
+            message:
+              "Cannot delete user because they are referenced in other records",
+          })
+          .code(400);
+      }
+      return h
+        .response({ message: `Failed to delete user: ${error.message}` })
+        .code(500);
     }
   },
 };

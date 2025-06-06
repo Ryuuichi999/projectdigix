@@ -235,13 +235,58 @@ const deleteBook = {
   handler: async (request, h) => {
     const { id } = request.params;
     try {
-      const book = await prisma.book.findUnique({ where: { id: Number(id) } });
-      if (!book) return h.response({ message: "Book not found" }).code(404);
-      await prisma.book.delete({ where: { id: Number(id) } });
-      return h.response({ message: "Book deleted" }).code(200);
+      const book = await prisma.book.findUnique({
+        where: { id: Number(id) },
+        include: {
+          stock: true,
+          categories: true,
+          orderDetails: true, 
+        },
+      });
+
+      if (!book) {
+        return h.response({ message: "Book not found" }).code(404);
+      }
+
+      // ตรวจสอบว่ามี orderDetails หรือไม่
+      if (book.orderDetails.length > 0) {
+        // ลบ orderDetails ที่เกี่ยวข้อง
+        await prisma.orderDetail.deleteMany({
+          where: { book_id: Number(id) },
+        });
+      }
+
+      // ลบ bookCategory
+      await prisma.bookCategory.deleteMany({
+        where: { book_id: Number(id) },
+      });
+
+      // ลบ stock
+      if (book.stock) {
+        await prisma.stock.delete({
+          where: { book_id: Number(id) },
+        });
+      }
+
+      // ลบ book
+      await prisma.book.delete({
+        where: { id: Number(id) },
+      });
+
+      return h.response({ message: "Book deleted successfully" }).code(200);
     } catch (error) {
-      console.error("Error deleting book:", error);
-      return h.response({ message: "Failed to delete book" }).code(500);
+      console.error(`Error deleting book (id=${id}):`, error);
+      if (error.code === "P2003") {
+        return h
+          .response({
+            message:
+              "Cannot delete book because it is referenced in other records",
+          })
+          .code(400);
+      }
+      return h
+        .response({ message: `Failed to delete book: ${error.message}` })
+        .code(500);
     }
   },
 };
