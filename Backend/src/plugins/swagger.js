@@ -19,7 +19,7 @@ exports.swaggerPlugin = {
             version: Package.version,
             description: "This is a sample API documentation",
           },
-          grouping: "tags", // แสดงกลุ่มตาม tag ใน controller
+          grouping: "tags", 
         },
       },
     ]);

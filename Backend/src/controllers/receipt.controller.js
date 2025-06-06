@@ -84,7 +84,7 @@ const createReceipt = {
           order_id: Number(order_id),
           receipt_number,
           total_amount,
-          issued_at: issued_at ? new Date(issued_at) : new Date(), // ป้องกัน error ด้วยการตรวจสอบ
+          issued_at: issued_at ? new Date(issued_at) : new Date(), 
         },
         include: { order: true },
       });
