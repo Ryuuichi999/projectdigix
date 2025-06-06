@@ -1,9 +1,11 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { useNuxtApp } from "nuxt/app"; 
 import Swal from "sweetalert2";
 
 const router = useRouter();
+const { $event } = useNuxtApp(); 
 const cart = ref([]);
 const isLoading = ref(false);
 
@@ -52,6 +54,7 @@ const updateQuantity = (item, change) => {
   item.quantity = newQuantity;
   if (process.client) {
     localStorage.setItem("cart", JSON.stringify(cart.value));
+    $event.emit("cart-updated");
   }
 };
 
@@ -59,6 +62,7 @@ const removeFromCart = (id) => {
   cart.value = cart.value.filter((item) => item.id !== id);
   if (process.client) {
     localStorage.setItem("cart", JSON.stringify(cart.value));
+    $event.emit("cart-updated");
   }
 };
 
@@ -71,8 +75,15 @@ const proceedToCheckout = async () => {
         title: "กรุณาเข้าสู่ระบบ",
         text: "คุณต้องล็อกอินก่อนดำเนินการชำระเงิน",
         confirmButtonColor: "#f59e0b",
+        confirmButtonText: "ไปที่หน้าเข้าสู่ระบบ",
+        showCancelButton: true,
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push("/auth/login");
+        }
       });
-      router.push("/auth/login");
       return;
     }
 
@@ -142,7 +153,7 @@ const proceedToCheckout = async () => {
           bookResponse.stock.quantity < item.quantity
         ) {
           throw new Error(
-            `Insufficient stock for book: ${item.title}. Available: ${
+            `Insufficient stock for book ID ${item.id}. Available: ${
               bookResponse.stock?.quantity || 0
             }`
           );
@@ -165,6 +176,7 @@ const proceedToCheckout = async () => {
       });
       cart.value = [];
       localStorage.setItem("cart", JSON.stringify(cart.value));
+      $event.emit("cart-updated"); // Emit event เพื่ออัปเดต Navbar
       router.push("/");
     } catch (error) {
       console.error("Error during checkout:", error);
@@ -273,4 +285,3 @@ const proceedToCheckout = async () => {
     </div>
   </div>
 </template>
-

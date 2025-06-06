@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, onUnmounted } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
 import Swal from "sweetalert2";
@@ -97,25 +97,25 @@ onMounted(() => {
       }
     };
     window.addEventListener("storage", checkUserUpdate);
-    onUnmounted(() => window.removeEventListener("storage", checkUserUpdate));
+
+    const handleClickOutside = (event) => {
+      if (
+        userIcon.value &&
+        !userIcon.value.contains(event.target) &&
+        dropdown.value &&
+        !dropdown.value.contains(event.target)
+      ) {
+        isDropdownOpen.value = false;
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+
+    onUnmounted(() => {
+      window.removeEventListener("storage", checkUserUpdate);
+      document.removeEventListener("click", handleClickOutside);
+      $event.off("cart-updated");
+    });
   }
-
-  const handleClickOutside = (event) => {
-    if (
-      userIcon.value &&
-      !userIcon.value.contains(event.target) &&
-      dropdown.value &&
-      !dropdown.value.contains(event.target)
-    ) {
-      isDropdownOpen.value = false;
-    }
-  };
-  document.addEventListener("click", handleClickOutside);
-
-  onUnmounted(() => {
-    document.removeEventListener("click", handleClickOutside);
-    $event.off("cart-updated");
-  });
 });
 
 const isLoggedIn = computed(() => user.value?.loggedIn || false);
@@ -126,7 +126,9 @@ const userName = computed(() => {
   return "ผู้ใช้";
 });
 const userRole = computed(() => user.value?.role || "");
-const cartCount = computed(() => cart.value.length);
+const cartCount = computed(() =>
+  cart.value.reduce((total, item) => total + item.quantity, 0)
+);
 
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value;
@@ -140,6 +142,9 @@ const handleCartClick = () => {
       text: "คุณต้องล็อกอินก่อนใช้งานตะกร้า",
       confirmButtonColor: "#f59e0b",
       confirmButtonText: "ไปที่หน้าล็อกอิน",
+      showCancelButton: true,
+      cancelButtonColor: "#d33",
+      cancelButtonText: "ยกเลิก",
     }).then((result) => {
       if (result.isConfirmed) {
         router.push("/auth/login");
@@ -154,6 +159,7 @@ const logout = () => {
   if (process.client) {
     localStorage.removeItem("user");
     localStorage.removeItem("cart");
+    $event.emit("cart-updated");
   }
   user.value = { loggedIn: false, name: "", role: "" };
   cart.value = [];
@@ -181,7 +187,7 @@ const logout = () => {
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">
       <button class="cursor-pointer" @click="router.push('/')">
-        <div class="w-15 h-15 shadow-lg rounded-full overflow-hidden">
+        <div class="w-10 h-10 shadow-lg rounded-full overflow-hidden">
           <img
             src="/images/Logo.jpg"
             alt="Logo"
@@ -299,7 +305,7 @@ const logout = () => {
         <!-- Dropdown เมนู -->
         <div
           v-if="isDropdownOpen"
-          class="absolute -right-9 ml-15 mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
+          class="absolute -right-9 mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
           ref="dropdown"
         >
           <nuxt-link
@@ -321,7 +327,6 @@ const logout = () => {
                 d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
               />
             </svg>
-
             จัดการโปรไฟล์
           </nuxt-link>
           <nuxt-link

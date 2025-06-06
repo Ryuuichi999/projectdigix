@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useNuxtApp } from 'nuxt/app';
-import Swal from 'sweetalert2';
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useNuxtApp } from "nuxt/app";
+import Swal from "sweetalert2";
 
 const route = useRoute();
 const router = useRouter();
@@ -18,7 +18,7 @@ const book = ref(null);
 // ตั้งค่า SweetAlert Toast
 const Toast = Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: "top-end",
   showConfirmButton: false,
   timer: 1500,
   timerProgressBar: true,
@@ -30,9 +30,9 @@ const Toast = Swal.mixin({
 
 // ฟังก์ชันสำหรับฟอร์แมตวันที่
 const formatDate = (dateString) => {
-  if (!dateString) return 'ไม่ระบุ';
+  if (!dateString) return "ไม่ระบุ";
   const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 };
 
 // ดึงข้อมูลหนังสือจาก API
@@ -46,12 +46,12 @@ const fetchBook = async () => {
     // ปรับโครงสร้างข้อมูลให้สอดคล้องกับ frontend
     book.value = {
       ...response,
-      category: response.categories?.[0]?.category?.category_name || 'ไม่ระบุ',
+      category: response.categories?.[0]?.category?.category_name || "ไม่ระบุ",
       stock: response.stock?.quantity ?? 0,
-      publisher: response.publisher || 'ไม่ระบุ',
+      publisher: response.publisher || "ไม่ระบุ",
     };
   } catch (error) {
-    console.error('Error fetching book:', error);
+    console.error("Error fetching book:", error);
     book.value = null;
   }
 };
@@ -63,48 +63,73 @@ onMounted(() => {
 
 const addToCart = () => {
   if (process.client) {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (!user.loggedIn) {
       Swal.fire({
-        icon: 'warning',
-        title: 'กรุณาเข้าสู่ระบบ',
-        text: 'คุณต้องเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า',
-        confirmButtonColor: '#f59e0b',
-        confirmButtonText: 'ไปที่หน้าเข้าสู่ระบบ',
+        icon: "warning",
+        title: "กรุณาเข้าสู่ระบบ",
+        text: "คุณต้องเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า",
+        confirmButtonColor: "#f59e0b",
+        confirmButtonText: "ไปที่หน้าเข้าสู่ระบบ",
         showCancelButton: true,
-        cancelButtonColor: '#d33',
-        cancelButtonText: 'ยกเลิก',
+        cancelButtonColor: "#d33",
+        cancelButtonText: "ยกเลิก",
       }).then((result) => {
         if (result.isConfirmed) {
-          router.push('/auth/login');
+          router.push("/auth/login");
         }
       });
       return;
     }
 
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingItem = cart.find(item => item.id === book.value.id);
+    if (!book.value) {
+      Swal.fire({
+        icon: "error",
+        title: "ข้อผิดพลาด",
+        text: "ไม่พบข้อมูลหนังสือ",
+        confirmButtonColor: "#f59e0b",
+      });
+      return;
+    }
+
+    if (book.value.stock <= 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "สินค้าหมด",
+        text: "ขออภัย สินค้าหมดสต็อก",
+        confirmButtonColor: "#f59e0b",
+      });
+      return;
+    }
+
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const existingItem = cart.find((item) => item.id === book.value.id);
+
     if (existingItem) {
+      if (existingItem.quantity >= book.value.stock) {
+        Swal.fire({
+          icon: "warning",
+          title: "สินค้าคงเหลือไม่เพียงพอ",
+          text: `คงเหลือ: ${book.value.stock} เล่ม`,
+          confirmButtonColor: "#f59e0b",
+        });
+        return;
+      }
       existingItem.quantity += 1;
     } else {
       cart.push({ ...book.value, quantity: 1 });
     }
-    localStorage.setItem('cart', JSON.stringify(cart));
 
-    // อัปเดตสถานะว่าเพิ่มแล้ว
+    localStorage.setItem("cart", JSON.stringify(cart));
     isAdded.value = true;
     setTimeout(() => {
       isAdded.value = false;
     }, 500);
-
-    // แสดง Toast แจ้งเตือน
     Toast.fire({
-      icon: 'success',
-      title: 'เพิ่มลงตะกร้าสำเร็จ',
+      icon: "success",
+      title: "เพิ่มลงตะกร้าสำเร็จ",
     });
-
-    // ส่ง event เพื่ออัปเดตตะกร้าใน Navbar
-    $event.emit('cart-updated');
+    $event.emit("cart-updated");
   }
 };
 </script>
@@ -166,18 +191,18 @@ const addToCart = () => {
             <p class="text-2xl font-bold text-red-600">{{ book.price }} ฿</p>
             <button
               @click="addToCart"
-              class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-semibold shadow flex items-center cursor-pointer transition-colors duration-300 relative"
+              class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-semibold shadow flex items-center cursor-pointer transition-colors duration-300"
               :class="{ 'bg-green-500 hover:bg-green-600': isAdded }"
             >
               <span v-if="!isAdded">🛒 ใส่ตะกร้า</span>
-              <span v-else class="flex items-center">
+              <span v-if="isAdded" else class="flex items-center">
                 🛒 เพิ่มแล้ว
                 <svg
                   class="w-4 h-4 ml-1"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
-                  stroke-width="2"
+                stroke-width="2"
                 >
                   <path
                     stroke-linecap="round"
@@ -191,9 +216,10 @@ const addToCart = () => {
         </div>
       </div>
 
-      <p v-else class="text-center text-gray-500 mt-12">
-        ไม่พบข้อมูลหนังสือที่คุณต้องการ
-      </p>
+      <div
+      v-else class="text-center text-gray-500 mt-12">
+        <p class="text-gray-500">ไม่พบข้อมูลหนังสือที่คุณต้องการ</p>
+      </div>
     </section>
   </div>
 </template>
