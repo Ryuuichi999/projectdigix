@@ -1,8 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import Swal from 'sweetalert2'; // นำเข้า SweetAlert2
-
+import Swal from 'sweetalert2';
 const route = useRoute();
 const router = useRouter();
 const bookId = route.params.id;

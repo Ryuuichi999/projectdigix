@@ -231,7 +231,7 @@ const proceedToCheckout = async () => {
       });
       cart.value = [];
       localStorage.setItem('cart', JSON.stringify(cart.value));
-      router.push('/'); // เปลี่ยนไปหน้า OrderHistory.vue
+      router.push('/'); 
     } catch (error) {
       console.error('Error during checkout:', error);
       if (orderId) {

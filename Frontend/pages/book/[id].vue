@@ -46,7 +46,7 @@
               🏢 สำนักพิมพ์: {{ book.publisher }}
             </p>
             <p class="text-gray-600 mb-2">
-              📅 วันที่ตีพิมพ์: {{ formatDate(book.published) }} <!-- ใช้ฟังก์ชันฟอร์แมตวันที่ -->
+              📅 วันที่ตีพิมพ์: {{ formatDate(book.published) }}
             </p>
           </div>
         </div>
@@ -107,7 +107,7 @@ const book = ref(null);
 const formatDate = (dateString) => {
   if (!dateString) return 'ไม่ระบุ';
   const date = new Date(dateString);
-  return date.toISOString().split('T')[0]; // ดึงเฉพาะส่วนวันที่ (YYYY-MM-DD)
+  return date.toISOString().split('T')[0]; 
 };
 
 // ดึงข้อมูลหนังสือจาก API

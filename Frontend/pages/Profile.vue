@@ -37,7 +37,7 @@ onMounted(() => {
       return;
     }
     userId.value = Number(user.id);
-    userName.value =  user.username || user.email?.split('@')[0] || "ผู้ใช้";
+    userName.value = user.username || user.email?.split("@")[0] || "ผู้ใช้";
     userEmail.value = user.email || "";
     fetchUser();
   }
@@ -46,10 +46,14 @@ onMounted(() => {
 const fetchUser = async () => {
   isLoading.value = true;
   try {
-    const response = await $fetch(`http://localhost:3000/users/${userId.value}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    });
-    userName.value =  response.username || response.email?.split('@')[0] || "ผู้ใช้";
+    const response = await $fetch(
+      `http://localhost:3000/users/${userId.value}`,
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    userName.value =
+      response.username || response.email?.split("@")[0] || "ผู้ใช้";
     userEmail.value = response.email || "";
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -98,15 +102,18 @@ const updateProfile = async () => {
     await $fetch(`http://localhost:3000/users/${userId.value}`, {
       method: "PUT",
       body,
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
 
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    localStorage.setItem("user", JSON.stringify({
-      ...user,
-      username: userName.value,
-      email: userEmail.value,
-    }));
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        ...user,
+        username: userName.value,
+        email: userEmail.value,
+      })
+    );
 
     Toast.fire({
       icon: "success",
@@ -127,30 +134,55 @@ const updateProfile = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-amber-100 via-white to-amber-100 py-12">
+  <div
+    class="min-h-screen bg-gradient-to-br from-amber-100 via-white to-amber-100 py-12"
+  >
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <NuxtLink to="/" class="text-sm text-blue-500 hover:underline mb-4 block ml-50">
+        ← ย้อนกลับ
+      </NuxtLink>
       <!-- Header -->
       <div class="mb-8 text-center animate-fade-in">
-        <h1 class="text-2xl font-bold text-gray-900 sm:text-4xl drop-shadow-md">จัดการข้อมูลส่วนตัว</h1>
+        <h1 class="text-2xl font-bold text-gray-900 sm:text-4xl drop-shadow-md">
+          จัดการข้อมูลส่วนตัว
+        </h1>
       </div>
 
       <!-- Loading State -->
       <div v-if="isLoading" class="flex justify-center items-center h-64">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-amber-500"></div>
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-t-4 border-amber-500"
+        ></div>
       </div>
 
       <!-- Profile Form -->
       <div v-else class="flex justify-center mx-auto animate-slide-up">
-        <div class="flex-1 max-w-md bg-white rounded-2xl shadow-xl p-8 border border-amber-100 sm:p-6">
+        <div
+          class="flex-1 max-w-md bg-white rounded-2xl shadow-xl p-8 border border-amber-100 sm:p-6"
+        >
           <!-- Form -->
           <div class="space-y-5">
             <!-- Name -->
             <div class="relative">
-              <label for="name" class="block text-sm font-medium text-gray-700">ชื่อ</label>
+              <label for="name" class="block text-sm font-medium text-gray-700"
+                >ชื่อ</label
+              >
               <div class="relative mt-1.5 rounded-md">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </div>
                 <input
@@ -165,11 +197,25 @@ const updateProfile = async () => {
 
             <!-- Email -->
             <div class="relative">
-              <label for="email" class="block text-sm font-medium text-gray-700">อีเมล</label>
+              <label for="email" class="block text-sm font-medium text-gray-700"
+                >อีเมล</label
+              >
               <div class="relative mt-1.5 rounded-md">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                 </div>
                 <input
@@ -184,11 +230,27 @@ const updateProfile = async () => {
 
             <!-- Password -->
             <div class="relative">
-              <label for="password" class="block text-sm font-medium text-gray-700">รหัสผ่านใหม่</label>
+              <label
+                for="password"
+                class="block text-sm font-medium text-gray-700"
+                >รหัสผ่านใหม่</label
+              >
               <div class="relative mt-1.5 rounded-md">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 1.1-.9 2-2 2s-2-.9-2-2 2-4 2-4 2 .9 2 2zm6 8H6v-1c0-2.2 3.6-4 6-4s6 1.8 6 4v1z" />
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 11c0 1.1-.9 2-2 2s-2-.9-2-2 2-4 2-4 2 .9 2 2zm6 8H6v-1c0-2.2 3.6-4 6-4s6 1.8 6 4v1z"
+                    />
                   </svg>
                 </div>
                 <input
@@ -203,11 +265,27 @@ const updateProfile = async () => {
 
             <!-- Confirm Password -->
             <div class="relative">
-              <label for="confirm-password" class="block text-sm font-medium text-gray-700">ยืนยันรหัสผ่าน</label>
+              <label
+                for="confirm-password"
+                class="block text-sm font-medium text-gray-700"
+                >ยืนยันรหัสผ่าน</label
+              >
               <div class="relative mt-1.5 rounded-md">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 1.1-.9 2-2 2s-2-.9-2-2 2-4 2-4 2 .9 2 2zm6 8H6v-1c0-2.2 3.6-4 6-4s6 1.8 6 4v1z" />
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 11c0 1.1-.9 2-2 2s-2-.9-2-2 2-4 2-4 2 .9 2 2zm6 8H6v-1c0-2.2 3.6-4 6-4s6 1.8 6 4v1z"
+                    />
                   </svg>
                 </div>
                 <input
@@ -224,13 +302,13 @@ const updateProfile = async () => {
             <div class="flex justify-end space-x-3 pt-3">
               <button
                 @click="router.push('/')"
-                class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200ms"
+                class="px-6 py-2 cursor-pointer text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition duration-200ms"
               >
                 ยกเลิก
               </button>
               <button
                 @click="updateProfile"
-                class="px-16 py-2 text-sm font-medium text-white bg-gradient-to-r from-rose-500 to-amber-600 rounded-lg hover:from-rose-600 hover:to-rose-700 transition duration-200 flex items-center space-x-2 shadow-md"
+                class="px-16 py-2 cursor-pointer text-sm font-medium text-white bg-gradient-to-r from-rose-500 to-amber-600 rounded-lg hover:from-rose-600 hover:to-rose-700 transition duration-200 flex items-center space-x-2 shadow-md"
                 :disabled="isLoading"
               >
                 <svg
@@ -240,10 +318,23 @@ const updateProfile = async () => {
                   fill="none"
                   viewBox="0 0 24 24"
                 >
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
                 </svg>
-                <span>{{ isLoading ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง' }}</span>
+                <span>{{
+                  isLoading ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"
+                }}</span>
               </button>
             </div>
           </div>
@@ -255,12 +346,22 @@ const updateProfile = async () => {
 
 <style scoped>
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes slide-up {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 .animate-fade-in {
   animation: fade-in 0.8s ease-out;
