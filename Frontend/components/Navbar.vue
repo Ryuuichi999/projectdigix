@@ -187,7 +187,7 @@ const logout = () => {
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">
       <button class="cursor-pointer" @click="router.push('/')">
-        <div class="w-10 h-10 shadow-lg rounded-full overflow-hidden">
+        <div class="w-15 h-15 shadow-lg rounded-full overflow-hidden">
           <img
             src="/images/Logo.jpg"
             alt="Logo"
