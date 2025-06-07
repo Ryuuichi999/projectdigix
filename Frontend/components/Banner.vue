@@ -3,8 +3,8 @@ import { ref, onMounted, onUnmounted } from 'vue';
 
 const slides = ref([
   { image: '/images/สืบสวน.jpg', title: 'โปรโมชันพิเศษ!', description: 'ซื้อครบ 500 บาท แถมเจ้าของเว็บ'},
-  { image: '/images/นวลนาง.jpg', title: 'หนังสือใหม่มาแรง', description: 'ค้นพบนิยายล่าสุดของเรา'},
-  { image: '/images/AH.jpg', title: 'หนังสือการ์ตูนมากมาย', description: 'หนังสือการ์ตูนที่เราคิดถึง'}
+  { image: '/images/wallpapers4.jpg', title: 'หนังสือใหม่มาแรง', description: 'ค้นพบนิยายล่าสุดของเรา'},
+  { image: '/images/wallpapers3.jpg', title: 'หนังสือการ์ตูนมากมาย', description: 'หนังสือการ์ตูนที่เราคิดถึง'}
 ]);
 
 const currentSlide = ref(0);
@@ -39,7 +39,7 @@ onUnmounted(() => {
 </style>
 
 <template>
-  <section class="relative w-full h-[350px] overflow-hidden">
+  <section class="relative w-full h-[370px] overflow-hidden">
     <div v-for="(slide, index) in slides" :key="index" class="absolute inset-0 transition-opacity duration-1000" :class="{ 'opacity-100': currentSlide === index, 'opacity-0': currentSlide !== index }">
       <img :src="slide.image" :alt="slide.title" class="w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
