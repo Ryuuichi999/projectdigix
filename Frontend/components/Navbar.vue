@@ -318,7 +318,7 @@ const navigateToAbout = () => {
         >
           <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
             <img
-              src="/images/icon.jpg"
+              src="/images/icon.png"
               alt="User Icon"
               class="w-full h-full object-cover"
               @error="
@@ -494,7 +494,7 @@ const navigateToAbout = () => {
         <div v-if="isLoggedIn" class="flex items-center space-x-3 pb-3 border-b border-amber-200">
           <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
             <img
-              src="/images/icon.jpg"
+              src="/images/icon.png"
               alt="User Icon"
               class="w-full h-full object-cover"
               @error="
