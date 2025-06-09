@@ -60,7 +60,7 @@ onUnmounted(() => {
 </style>
 
 <template>
-  <section class="relative w-full h-[370px] overflow-hidden">
+  <section class="relative w-full h-[400px] overflow-hidden">
     <div
       v-for="(slide, index) in slides"
       :key="index"
