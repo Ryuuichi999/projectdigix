@@ -11,8 +11,8 @@ const bookId = parseInt(route.params.id);
 
 // สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
 const isAdded = ref(false);
-const isLoading = ref(true); 
-const showExtraInfo = ref(false); 
+const isLoading = ref(true);
+const showExtraInfo = ref(false);
 
 // สถานะสำหรับเก็บข้อมูลหนังสือ
 const book = ref(null);
@@ -155,7 +155,7 @@ const toggleExtraInfo = () => {
 </script>
 
 <style scoped>
-/* Animation for fade-in */
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;
@@ -166,7 +166,7 @@ const toggleExtraInfo = () => {
   opacity: 0;
 }
 
-/* Pulse animation for add to cart button */
+
 .pulse {
   animation: pulse 0.5s ease-in-out;
 }
@@ -180,7 +180,7 @@ const toggleExtraInfo = () => {
   }
 }
 
-/* Hover effect for extra info */
+
 .extra-info {
   transition: max-height 0.3s ease-in-out;
   max-height: 0;
@@ -188,7 +188,7 @@ const toggleExtraInfo = () => {
 }
 
 .extra-info.active {
-  max-height: 200px; /* ปรับตามความยาวของเนื้อหา */
+  max-height: 200px; /
 }
 </style>
 
@@ -199,9 +199,14 @@ const toggleExtraInfo = () => {
         ← ย้อนกลับ
       </NuxtLink>
       <Transition name="fade">
-        <div v-if="book && !isLoading" class="bg-white shadow-xl rounded-xl overflow-hidden flex flex-col md:flex-row">
+        <div
+          v-if="book && !isLoading"
+          class="bg-white shadow-xl rounded-xl overflow-hidden flex flex-col md:flex-row"
+        >
           <!-- รูปภาพฝั่งซ้าย -->
-          <div class="md:w-1/2 bg-gray-100 flex items-center justify-center p-4">
+          <div
+            class="md:w-1/2 bg-gray-100 flex items-center justify-center p-4"
+          >
             <img
               :src="book.image"
               alt="book image"
