@@ -135,14 +135,14 @@ const addToCart = () => {
 </script>
 
 <template>
-  <div class="bg-amber-50 min-h-screen">
-    <section class="max-w-6xl mx-auto p-6">
+  <div class="bg-amber-50 min-h-screen py-15">
+    <section class="max-w-6xl mx-auto p-6 py-10">
       <NuxtLink to="/" class="text-sm text-blue-500 hover:underline mb-4 block">
         ← ย้อนกลับ
       </NuxtLink>
       <div
         v-if="book"
-        class="bg-white shadow-xl rounded-xl overflow-hidden flex flex-col md:flex-row"
+        class="bg-white shadow-xl rounded-xl overflow-hidden flex flex-col md:flex-row "
       >
         <!-- รูปภาพฝั่งซ้าย -->
         <div class="md:w-1/2 bg-gray-100 flex items-center justify-center p-4">
