@@ -11,25 +11,17 @@ const init = async () => {
     host: "0.0.0.0",
     routes: {
       cors: {
-        origin: ["*"],
+        origin: ['*'],
         credentials: true,
       },
       validate: {
         failAction: async (request, h, err) => {
-          throw err;
+          throw err; 
         },
       },
     },
   });
 
-  // Route ชั่วคราวเพื่อทดสอบ
-  server.route({
-    method: "GET",
-    path: "/test",
-    handler: (request, h) => {
-      return h.response({ message: "Server is running!" }).code(200);
-    },
-  });
   await server.register(authPlugin);
   // Register the authentication plugin to handle JWT authentication
 
