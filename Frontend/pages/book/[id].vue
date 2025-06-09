@@ -56,7 +56,7 @@ const fetchBook = async () => {
     console.error("Error fetching book:", error);
     book.value = null;
   } finally {
-    isLoading.value = false; // ปิดสถานะโหลดเมื่อเสร็จ
+    isLoading.value = false;
   }
 };
 
@@ -155,7 +155,7 @@ const toggleExtraInfo = () => {
 </script>
 
 <style scoped>
-
+/* Animation for fade-in */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;
@@ -166,20 +166,19 @@ const toggleExtraInfo = () => {
   opacity: 0;
 }
 
-
 .pulse {
   animation: pulse 0.5s ease-in-out;
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
     transform: scale(1.05);
   }
 }
-
 
 .extra-info {
   transition: max-height 0.3s ease-in-out;
@@ -188,7 +187,7 @@ const toggleExtraInfo = () => {
 }
 
 .extra-info.active {
-  max-height: 200px; /
+  max-height: 200px;
 }
 </style>
 
@@ -231,7 +230,6 @@ const toggleExtraInfo = () => {
               <br />
               <br />
               <p class="text-gray-700 mb-6">{{ book.description }}</p>
-              <!-- ปุ่มสำหรับข้อมูลเพิ่มเติม -->
             </div>
 
             <div class="flex flex-col md:flex-row md:space-x-4">
