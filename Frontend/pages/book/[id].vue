@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
 import Swal from "sweetalert2";
@@ -11,6 +11,8 @@ const bookId = parseInt(route.params.id);
 
 // สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
 const isAdded = ref(false);
+const isLoading = ref(true); // เพิ่มสถานะโหลด
+const showExtraInfo = ref(false); // สำหรับข้อมูลเพิ่มเติม
 
 // สถานะสำหรับเก็บข้อมูลหนังสือ
 const book = ref(null);
@@ -53,8 +55,22 @@ const fetchBook = async () => {
   } catch (error) {
     console.error("Error fetching book:", error);
     book.value = null;
+  } finally {
+    isLoading.value = false; // ปิดสถานะโหลดเมื่อเสร็จ
   }
 };
+
+// คำนวณสีพื้นหลังตามหมวดหมู่
+const backgroundStyle = computed(() => {
+  const category = book.value?.category.toLowerCase() || "default";
+  const bgColors = {
+    fiction: "bg-gradient-to-r from-blue-100 to-indigo-100",
+    nonfiction: "bg-gradient-to-r from-green-100 to-emerald-100",
+    fantasy: "bg-gradient-to-r from-purple-100 to-pink-100",
+    default: "bg-amber-50",
+  };
+  return bgColors[category] || bgColors.default;
+});
 
 // เรียก API เมื่อ component ถูก mount
 onMounted(() => {
@@ -132,93 +148,137 @@ const addToCart = () => {
     $event.emit("cart-updated");
   }
 };
+
+const toggleExtraInfo = () => {
+  showExtraInfo.value = !showExtraInfo.value;
+};
 </script>
 
+<style scoped>
+/* Animation for fade-in */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Pulse animation for add to cart button */
+.pulse {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Hover effect for extra info */
+.extra-info {
+  transition: max-height 0.3s ease-in-out;
+  max-height: 0;
+  overflow: hidden;
+}
+
+.extra-info.active {
+  max-height: 200px; /* ปรับตามความยาวของเนื้อหา */
+}
+</style>
+
 <template>
-  <div class="bg-amber-50 min-h-screen py-15">
+  <div :class="backgroundStyle" class="min-h-screen py-15">
     <section class="max-w-6xl mx-auto p-6 py-10">
       <NuxtLink to="/" class="text-sm text-blue-500 hover:underline mb-4 block">
         ← ย้อนกลับ
       </NuxtLink>
-      <div
-        v-if="book"
-        class="bg-white shadow-xl rounded-xl overflow-hidden flex flex-col md:flex-row "
-      >
-        <!-- รูปภาพฝั่งซ้าย -->
-        <div class="md:w-1/2 bg-gray-100 flex items-center justify-center p-4">
-          <img
-            :src="book.image"
-            alt="book image"
-            class="w-full max-w-full md:max-w-md h-auto max-h-96 rounded-lg shadow-lg object-contain"
-          />
-        </div>
-
-        <!-- รายละเอียดฝั่งขวา -->
-        <div class="md:w-1/2 p-6 flex flex-col justify-between">
-          <div class="mb-4">
-            <h1 class="text-3xl font-bold mb-2 inline-flex items-center">
-              {{ book.title }}
-              <span class="text-sm text-gray-500 ml-5 mt-2"
-                >(คงเหลือ: {{ book.stock }} เล่ม)</span
-              >
-            </h1>
-            <br />
-            <span
-              class="text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full mb-2 inline-block"
-              >{{ book.category }}</span
-            >
-            <br />
-            <br />
-            <p class="text-gray-700 mb-6">{{ book.description }}</p>
+      <Transition name="fade">
+        <div v-if="book && !isLoading" class="bg-white shadow-xl rounded-xl overflow-hidden flex flex-col md:flex-row">
+          <!-- รูปภาพฝั่งซ้าย -->
+          <div class="md:w-1/2 bg-gray-100 flex items-center justify-center p-4">
+            <img
+              :src="book.image"
+              alt="book image"
+              class="w-full max-w-full md:max-w-md h-auto max-h-96 rounded-lg shadow-lg object-contain"
+            />
           </div>
 
-          <div class="flex flex-col md:flex-row md:space-x-4">
-            <div class="md:w-1/2">
-              <p class="text-gray-600 mb-2">✍️ ผู้แต่ง: {{ book.author }}</p>
-              <p class="text-gray-600 mb-2">📚 ISBN: {{ book.isbn }}</p>
-            </div>
-            <div class="md:w-1/2">
-              <p class="text-gray-600 mb-2">
-                🏢 สำนักพิมพ์: {{ book.publisher }}
-              </p>
-              <p class="text-gray-600 mb-2">
-                📅 วันที่ตีพิมพ์: {{ formatDate(book.published) }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-6 mt-6">
-            <p class="text-2xl font-bold text-red-600">{{ book.price }} ฿</p>
-            <button
-              @click="addToCart"
-              class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-semibold shadow flex items-center cursor-pointer transition-colors duration-300"
-              :class="{ 'bg-green-500 hover:bg-green-600': isAdded }"
-            >
-              <span v-if="!isAdded">🛒 ใส่ตะกร้า</span>
-              <span v-if="isAdded" else class="flex items-center">
-                🛒 เพิ่มแล้ว
-                <svg
-                  class="w-4 h-4 ml-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                stroke-width="2"
+          <!-- รายละเอียดฝั่งขวา -->
+          <div class="md:w-1/2 p-6 flex flex-col justify-between">
+            <div class="mb-4">
+              <h1 class="text-3xl font-bold mb-2 inline-flex items-center">
+                {{ book.title }}
+                <span class="text-sm text-gray-500 ml-5 mt-2"
+                  >(คงเหลือ: {{ book.stock }} เล่ม)</span
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </span>
-            </button>
+              </h1>
+              <br />
+              <span
+                class="text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full mb-2 inline-block"
+                >{{ book.category }}</span
+              >
+              <br />
+              <br />
+              <p class="text-gray-700 mb-6">{{ book.description }}</p>
+              <!-- ปุ่มสำหรับข้อมูลเพิ่มเติม -->
+            </div>
+
+            <div class="flex flex-col md:flex-row md:space-x-4">
+              <div class="md:w-1/2">
+                <p class="text-gray-600 mb-2">✍️ ผู้แต่ง: {{ book.author }}</p>
+                <p class="text-gray-600 mb-2">📚 ISBN: {{ book.isbn }}</p>
+              </div>
+              <div class="md:w-1/2">
+                <p class="text-gray-600 mb-2">
+                  🏢 สำนักพิมพ์: {{ book.publisher }}
+                </p>
+                <p class="text-gray-600 mb-2">
+                  📅 วันที่ตีพิมพ์: {{ formatDate(book.published) }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-6 mt-6">
+              <p class="text-2xl font-bold text-red-600">{{ book.price }} ฿</p>
+              <button
+                @click="addToCart"
+                class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-semibold shadow flex items-center cursor-pointer transition-colors duration-300 pulse"
+                :class="{ 'bg-green-500 hover:bg-green-600': isAdded }"
+              >
+                <span v-if="!isAdded">🛒 ใส่ตะกร้า</span>
+                <span v-if="isAdded" class="flex items-center">
+                  🛒 เพิ่มแล้ว
+                  <svg
+                    class="w-4 h-4 ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </Transition>
 
-      <div
-      v-else class="text-center text-gray-500 mt-12">
-        <p class="text-gray-500">ไม่พบข้อมูลหนังสือที่คุณต้องการ</p>
+      <div v-if="isLoading" class="text-center text-gray-500 mt-12">
+        <p>กำลังโหลดข้อมูล...</p>
+      </div>
+      <div v-if="!isLoading && !book" class="text-center text-gray-500 mt-12">
+        <p>ไม่พบข้อมูลหนังสือที่คุณต้องการ</p>
       </div>
     </section>
   </div>
