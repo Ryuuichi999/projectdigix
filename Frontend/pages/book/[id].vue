@@ -11,8 +11,8 @@ const bookId = parseInt(route.params.id);
 
 // สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
 const isAdded = ref(false);
-const isLoading = ref(true);
-const showExtraInfo = ref(false);
+const isLoading = ref(true); 
+const showExtraInfo = ref(false); 
 
 // สถานะสำหรับเก็บข้อมูลหนังสือ
 const book = ref(null);
@@ -56,7 +56,7 @@ const fetchBook = async () => {
     console.error("Error fetching book:", error);
     book.value = null;
   } finally {
-    isLoading.value = false;
+    isLoading.value = false; 
   }
 };
 
@@ -166,13 +166,13 @@ const toggleExtraInfo = () => {
   opacity: 0;
 }
 
+
 .pulse {
   animation: pulse 0.5s ease-in-out;
 }
 
 @keyframes pulse {
-  0%,
-  100% {
+  0%, 100% {
     transform: scale(1);
   }
   50% {
@@ -187,7 +187,7 @@ const toggleExtraInfo = () => {
 }
 
 .extra-info.active {
-  max-height: 200px;
+  max-height: 200px; 
 }
 </style>
 
@@ -198,14 +198,9 @@ const toggleExtraInfo = () => {
         ← ย้อนกลับ
       </NuxtLink>
       <Transition name="fade">
-        <div
-          v-if="book && !isLoading"
-          class="bg-white shadow-xl rounded-xl overflow-hidden flex flex-col md:flex-row"
-        >
+        <div v-if="book && !isLoading" class="bg-white shadow-xl rounded-xl overflow-hidden flex flex-col md:flex-row">
           <!-- รูปภาพฝั่งซ้าย -->
-          <div
-            class="md:w-1/2 bg-gray-100 flex items-center justify-center p-4"
-          >
+          <div class="md:w-1/2 bg-gray-100 flex items-center justify-center p-4">
             <img
               :src="book.image"
               alt="book image"

@@ -12,7 +12,6 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@nuxt/ui": "^3.1.2",
-    "@nuxt/ui-pro": "^3.1.2",
     "@pinia/nuxt": "^0.11.0",
     "@tailwindcss/vite": "^4.1.7",
     "font-awesome": "^4.7.0",

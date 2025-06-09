@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   plugins: ['~/plugins/eventBus.js'],
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/ui', '@nuxt/ui-pro', '@pinia/nuxt'],
+  modules: ['@nuxt/ui', '@pinia/nuxt'],
   css: ['~/assets/css/main.css','@fortawesome/fontawesome-free/css/all.min.css'],
   vite: {
     plugins: [
