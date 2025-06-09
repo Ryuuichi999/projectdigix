@@ -95,7 +95,7 @@ const confirmReceived = async (orderId) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 py-12">
+  <div class="min-h-screen bg-gray-50 py-22">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Header -->
       <div class="mb-8">

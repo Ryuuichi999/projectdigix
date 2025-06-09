@@ -1,14 +1,13 @@
 <script setup>
 definePageMeta({
-  layout: 'default'
-})
+  layout: "default",
+});
 </script>
 
 <template>
-  <div class="bg-amber-50 min-h-screen">
+  <div class="bg-amber-50">
     <Banner />
-    <div id="book-list" class="p-6">
-      <BookList />
-    </div>
+    <BookList />
+    <Footer />
   </div>
 </template>

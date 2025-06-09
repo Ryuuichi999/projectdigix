@@ -173,6 +173,14 @@ const logout = () => {
 </script>
 
 <style scoped>
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
 .group:hover .group-hover\:opacity-100,
 .group:focus-within .focus-within\:opacity-100 {
   opacity: 1 !important;
@@ -182,7 +190,7 @@ const logout = () => {
 
 <template>
   <nav
-    class="bg-amber-300 text-white px-6 py-8 flex justify-between items-center h-12"
+    class="bg-amber-300  text-white px-6 py-8 flex justify-between items-center h-12 "
   >
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">

@@ -176,7 +176,7 @@ const proceedToCheckout = async () => {
       });
       cart.value = [];
       localStorage.setItem("cart", JSON.stringify(cart.value));
-      $event.emit("cart-updated"); // Emit event เพื่ออัปเดต Navbar
+      $event.emit("cart-updated");
       router.push("/");
     } catch (error) {
       console.error("Error during checkout:", error);

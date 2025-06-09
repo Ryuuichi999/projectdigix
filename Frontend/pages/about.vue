@@ -5,7 +5,7 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="bg-amber-50 min-h-screen">
+  <div class="bg-amber-50 min-h-screen py-12">
     <!-- Story Section -->
     <section class="py-12 max-w-5xl mx-auto px-4">
       <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">เรื่องราวของเรา</h2>

@@ -10,7 +10,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/ui-pro', '@pinia/nuxt'],
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css','@fortawesome/fontawesome-free/css/all.min.css'],
   vite: {
     plugins: [
       tailwindcss(),
