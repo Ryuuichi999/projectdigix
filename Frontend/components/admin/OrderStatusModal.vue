@@ -103,13 +103,13 @@ const submitStatusChange = async () => {
       </div>
       <button
         @click="submitStatusChange"
-        class="w-full bg-amber-500 text-white py-3 rounded-lg hover:bg-amber-600"
+        class="w-full bg-amber-500 text-white py-3 rounded-lg hover:bg-amber-600 cursor-pointer"
       >
         บันทึกการเปลี่ยนแปลง
       </button>
       <button
         @click="emit('close')"
-        class="w-full mt-2 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600"
+        class="w-full mt-2 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 cursor-pointer"
       >
         ยกเลิก
       </button>

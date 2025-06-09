@@ -4,7 +4,7 @@
       class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center"
     >
       <!-- คอลัมน์ข้อมูล -->
-      <div class="mb-6 md:mb-0 text-center pl-20">
+      <div class="mb-6 md:mb-0 text-center pl-40">
         <h3 class="text-xl font-semibold text-amber-800 mb-2">
           ร้านหนังสือของเรา
         </h3>
@@ -13,16 +13,20 @@
       </div>
 
       <!-- โซเชียลมีเดีย -->
-      <div class="text-center pr-20">
+      <div class="text-center pr-40">
         <h4 class="text-lg font-medium text-amber-800 mb-2">ติดตามเรา</h4>
         <div class="flex justify-center space-x-6">
-          <a href="https://facebook.com" class="hover:text-amber-600 transition-colors text-lg flex items-center">
+          <a
+            href="https://www.facebook.com/share/16KGr2RDef/"
+            class="hover:text-amber-600 transition-colors text-lg flex items-center"
+          >
             <i class="fab fa-facebook-f mr-2"></i> Facebook
           </a>
-          <a href="https://twitter.com" class="hover:text-amber-600 transition-colors text-lg flex items-center">
-            <i class="fab fa-twitter mr-2"></i> Twitter
-          </a>
-          <a href="https://instagram.com" class="hover:text-amber-600 transition-colors text-lg flex items-center">
+
+          <a
+            href="https://www.instagram.com/ryuuichi.png?igsh=emEzcXc3djV4aGx2"
+            class="hover:text-amber-600 transition-colors text-lg flex items-center"
+          >
             <i class="fab fa-instagram mr-2"></i> Instagram
           </a>
         </div>

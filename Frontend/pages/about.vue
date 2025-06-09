@@ -1,6 +1,6 @@
 <script setup>
 definePageMeta({
-  layout: 'default',
+  layout: "default",
 });
 </script>
 
@@ -8,26 +8,42 @@ definePageMeta({
   <div class="bg-amber-50 min-h-screen py-12">
     <!-- Story Section -->
     <section class="py-12 max-w-5xl mx-auto px-4">
-      <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">เรื่องราวของเรา</h2>
+      <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">
+        เรื่องราวของเรา
+      </h2>
       <div class="grid md:grid-cols-2 gap-8">
         <div class="flex flex-col justify-center">
           <p class="text-gray-600 leading-relaxed">
-            ร้านหนังสือของเราเริ่มต้นจากความฝันเล็ก ๆ ที่อยากให้ทุกคนมีโอกาสเข้าถึงหนังสือดี ๆ แม้เราจะมีหนังสือไม่มาก แต่ทุกเล่มถูกคัดสรรด้วยใจ
+            ร้านหนังสือของเราเริ่มต้นจากความฝันเล็ก ๆ
+            ที่อยากให้ทุกคนมีโอกาสเข้าถึงหนังสือดี ๆ แม้เราจะมีหนังสือไม่มาก
+            แต่ทุกเล่มถูกคัดสรรด้วยใจ
           </p>
           <p class="mt-4 text-gray-600 leading-relaxed">
-            ด้วยสโลแกน <span class="text-amber-600 font-semibold">"ร้านที่รวบรวมหนังสือน้อยที่สุดในประเทศไทย"</span> เรามุ่งมั่นสร้างประสบการณ์การเลือกซื้อที่อบอุ่นและเป็นกันเอง
+            ด้วยสโลแกน
+            <span class="text-amber-600 font-semibold"
+              >"ร้านที่รวบรวมหนังสือน้อยที่สุดในประเทศไทย"</span
+            >
+            เรามุ่งมั่นสร้างประสบการณ์การเลือกซื้อที่อบอุ่นและเป็นกันเอง
           </p>
         </div>
-        <img src="/images/สืบสวน.jpg" alt="Bookstore Story" class="w-full h-64 object-cover rounded-lg shadow-md animate-slide-up" />
+        <img
+          src="/images/สืบสวน.jpg"
+          alt="Bookstore Story"
+          class="w-full h-64 object-cover rounded-lg shadow-md animate-slide-up"
+        />
       </div>
     </section>
 
     <!-- Team Section -->
     <section class="py-16 bg-amber-100">
       <div class="max-w-5xl mx-auto px-4">
-        <h2 class="text-3xl font-semibold text-gray-800 mb-8 text-center">ทีมงานของเรา</h2>
+        <h2 class="text-3xl font-semibold text-gray-800 mb-8 text-center">
+          ทีมงานของเรา
+        </h2>
         <div class="flex justify-center">
-          <div class="bg-white p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 animate-slide-up max-w-md w-full text-center">
+          <div
+            class="bg-white p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 animate-slide-up max-w-md w-full text-center"
+          >
             <img
               :src="team[0].image"
               :alt="team[0].name"
@@ -59,12 +75,22 @@ export default {
 
 <style scoped>
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes slide-up {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 .animate-fade-in {
   animation: fade-in 0.8s ease-out;

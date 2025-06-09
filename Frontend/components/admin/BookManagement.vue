@@ -1,3 +1,4 @@
+```vue
 <script setup>
 import { ref } from "vue";
 import Swal from "sweetalert2";
@@ -58,7 +59,7 @@ const deleteBook = async (id) => {
   }
 };
 
-const truncateDescription = (text, maxLength = 40) => {
+const truncateDescription = (text, maxLength = 30) => {
   if (!text) return "";
   if (text.length > maxLength) {
     return text.substring(0, maxLength) + "...";
@@ -86,22 +87,25 @@ const truncateDescription = (text, maxLength = 40) => {
             <th class="px-4 py-2 text-left">ชื่อหนังสือ</th>
             <th class="px-4 py-2 text-left">ราคา</th>
             <th class="px-4 py-2 text-left">หมวดหมู่</th>
-            <th class="px-4 py-2 text-left">คำอธิบาย</th>
             <th class="px-4 py-2 text-left">สินค้าคงเหลือ</th>
+            <th class="px-4 py-2 text-left">ยอดขาย</th>
             <th class="px-4 py-2 text-right">การจัดการ</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="book in props.books" :key="book.id" class="border-b">
+          <tr
+            v-for="book in props.books"
+            :key="book.id"
+            class="border-b hover:bg-gray-50"
+          >
             <td class="px-4 py-2">{{ book.id }}</td>
             <td class="px-4 py-2">{{ book.title }}</td>
             <td class="px-4 py-2">{{ book.price }} ฿</td>
             <td class="px-4 py-2">{{ book.category }}</td>
-            <td class="px-4 py-2">
-              {{ truncateDescription(book.description) }}
-            </td>
+
             <td class="px-4 py-2">{{ book.stock }}</td>
-            <td class="px-4 py-2 text-right space-x-2">
+            <td class="px-4 py-2">{{ book.soldQuantity }}</td>
+            <td class="px-4 py-2 text-right space-x-3">
               <button
                 @click="emit('manage-stock', book)"
                 class="text-green-500 hover:underline cursor-pointer"
@@ -126,7 +130,7 @@ const truncateDescription = (text, maxLength = 40) => {
             </td>
           </tr>
           <tr v-if="props.books.length === 0" class="border-b">
-            <td colspan="7" class="px-4 py-2 text-center text-gray-500">
+            <td colspan="8" class="px-4 py-2 text-center text-gray-500">
               ไม่มีข้อมูล
             </td>
           </tr>

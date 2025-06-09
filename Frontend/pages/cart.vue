@@ -1,11 +1,11 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useNuxtApp } from "nuxt/app"; 
+import { useNuxtApp } from "nuxt/app";
 import Swal from "sweetalert2";
 
 const router = useRouter();
-const { $event } = useNuxtApp(); 
+const { $event } = useNuxtApp();
 const cart = ref([]);
 const isLoading = ref(false);
 

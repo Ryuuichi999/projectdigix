@@ -1,3 +1,4 @@
+```vue
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
@@ -74,6 +75,22 @@ const fetchData = async () => {
       const bookResponse = await $fetch("http://localhost:3000/books", {
         method: "GET",
       });
+      const orderResponse = await $fetch("http://localhost:3000/orders", {
+        method: "GET",
+      });
+
+      // คำนวณจำนวนหนังสือที่ขายไป
+      const soldQuantities = {};
+      orderResponse.forEach((order) => {
+        order.orderDetails?.forEach((detail) => {
+          const bookId = detail.book_id;
+          if (bookId) {
+            soldQuantities[bookId] =
+              (soldQuantities[bookId] || 0) + detail.quantity;
+          }
+        });
+      });
+
       books.value = bookResponse.map((book) => ({
         id: book.id,
         title: book.title,
@@ -82,14 +99,16 @@ const fetchData = async () => {
         description: book.description || "",
         stock: book.stock?.quantity ?? 0,
         stock_id: book.stock?.id,
+        soldQuantity: soldQuantities[book.id] || 0,
       }));
     } catch (error) {
-      console.error("Error fetching books:", error);
+      console.error("Error fetching books or orders:", error);
       Swal.fire({
         icon: "error",
         title: "ข้อผิดพลาด",
         text:
-          "ไม่สามารถดึงข้อมูลหนังสือได้: " + (error.message || "Unknown error"),
+          "ไม่สามารถดึงข้อมูลหนังสือหรือคำสั่งซื้อได้: " +
+          (error.message || "Unknown error"),
         confirmButtonColor: "#f59e0b",
       });
       books.value = [];
@@ -284,7 +303,7 @@ const handleUpdateStock = ({ id, stock, history }) => {
 <template>
   <div class="min-h-screen bg-gray-100 p-6">
     <div class="max-w-6xl mx-auto">
-      <h1 class="text-3xl font-bold mb-6 text-amber-600">Admin Dashboard</h1>
+      <h1 class="text-3xl font-bold mb-20 text-amber-600"></h1>
 
       <!-- Tab Navigation -->
       <div class="mb-6 flex space-x-4">

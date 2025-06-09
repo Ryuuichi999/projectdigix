@@ -1,3 +1,4 @@
+```vue
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -170,6 +171,15 @@ const logout = () => {
     title: "ออกจากระบบสำเร็จ",
   });
 };
+
+// ฟังก์ชันสำหรับการคลิกโลโก้
+const handleLogoClick = () => {
+  if (userRole.value === "admin" && isLoggedIn.value) {
+    router.push("/admin");
+  } else {
+    router.push("/");
+  }
+};
 </script>
 
 <style scoped>
@@ -190,11 +200,11 @@ nav {
 
 <template>
   <nav
-    class="bg-amber-300  text-white px-6 py-8 flex justify-between items-center h-12 "
+    class="bg-amber-300 text-white px-6 py-8 flex justify-between items-center h-12"
   >
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">
-      <button class="cursor-pointer" @click="router.push('/')">
+      <button class="cursor-pointer" @click="handleLogoClick">
         <div class="w-15 h-15 shadow-lg rounded-full overflow-hidden">
           <img
             src="/images/Logo.jpg"

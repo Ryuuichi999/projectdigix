@@ -6,7 +6,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const orders = ref([]);
 const userId = ref(null);
-const userName = ref(null); 
+const userName = ref(null);
 const isLoading = ref(true);
 
 const Toast = Swal.mixin({
@@ -35,7 +35,7 @@ onMounted(() => {
       return;
     }
     userId.value = Number(user.id);
-    userName.value = user.name || user.username || "ผู้ใช้"; 
+    userName.value = user.name || user.username || "ผู้ใช้";
     fetchOrders();
   }
 });
@@ -43,7 +43,9 @@ onMounted(() => {
 const fetchOrders = async () => {
   isLoading.value = true;
   try {
-    const response = await $fetch(`http://localhost:3000/orders/user/${userId.value}`);
+    const response = await $fetch(
+      `http://localhost:3000/orders/user/${userId.value}`
+    );
     orders.value = response;
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -100,21 +102,44 @@ const confirmReceived = async (orderId) => {
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900">ประวัติการสั่งซื้อ</h1>
-        <p class="text-sm text-gray-500 mt-1 font-bold">ของคุณ {{ userName || 'กำลังโหลด...' }}</p>
+        <p class="text-sm text-gray-500 mt-1 font-bold">
+          ของคุณ {{ userName || "กำลังโหลด..." }}
+        </p>
       </div>
 
       <!-- Loading State -->
       <div v-if="isLoading" class="flex justify-center items-center h-64">
-        <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-amber-500"></div>
+        <div
+          class="animate-spin rounded-full h-10 w-10 border-t-4 border-amber-500"
+        ></div>
       </div>
 
       <!-- No Orders -->
-      <div v-else-if="orders.length === 0" class="bg-white rounded-xl shadow-md p-6 text-center">
-        <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+      <div
+        v-else-if="orders.length === 0"
+        class="bg-white rounded-xl shadow-md p-6 text-center"
+      >
+        <svg
+          class="mx-auto h-12 w-12 text-gray-400 mb-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+          ></path>
         </svg>
-        <p class="text-gray-500 text-base font-medium">ไม่มีประวัติการสั่งซื้อ</p>
-        <NuxtLink to="/" class="mt-3 inline-block bg-amber-500 text-white px-5 py-2 rounded-lg hover:bg-amber-600 transition-all text-sm">
+        <p class="text-gray-500 text-base font-medium">
+          ไม่มีประวัติการสั่งซื้อ
+        </p>
+        <NuxtLink
+          to="/"
+          class="mt-3 inline-block bg-amber-500 text-white px-5 py-2 rounded-lg hover:bg-amber-600 transition-all text-sm"
+        >
           ไปช้อปปิ้งเลย!
         </NuxtLink>
       </div>
@@ -128,7 +153,9 @@ const confirmReceived = async (orderId) => {
         >
           <!-- Order Header -->
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold text-gray-800">คำสั่งซื้อ #{{ order.id }}</h2>
+            <h2 class="text-lg font-semibold text-gray-800">
+              คำสั่งซื้อ #{{ order.id }}
+            </h2>
             <span
               class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
               :class="{
@@ -143,8 +170,19 @@ const confirmReceived = async (orderId) => {
                 fill="none"
                 viewBox="0 0 24 24"
               >
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
               </svg>
               <svg
                 v-else
@@ -153,9 +191,14 @@ const confirmReceived = async (orderId) => {
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
               </svg>
-              {{ order.status === 'PENDING' ? 'รอรับสินค้า' : 'สำเร็จ' }}
+              {{ order.status === "PENDING" ? "รอรับสินค้า" : "สำเร็จ" }}
             </span>
           </div>
 
@@ -163,7 +206,13 @@ const confirmReceived = async (orderId) => {
           <div class="space-y-3 text-sm text-gray-600">
             <p>
               <span class="font-medium">วันที่:</span>
-              {{ new Date(order.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) }}
+              {{
+                new Date(order.created_at).toLocaleDateString("th-TH", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })
+              }}
             </p>
             <p>
               <span class="font-medium">ยอดรวม:</span>
@@ -171,7 +220,7 @@ const confirmReceived = async (orderId) => {
             </p>
             <p>
               <span class="font-medium">ใบเสร็จ:</span>
-              {{ order.receipt?.receipt_number || 'ไม่มี' }}
+              {{ order.receipt?.receipt_number || "ไม่มี" }}
             </p>
           </div>
 
@@ -188,9 +237,15 @@ const confirmReceived = async (orderId) => {
                 class="w-10 h-14 object-cover rounded-md"
               />
               <div class="flex-1">
-                <p class="text-gray-800 font-medium text-xs truncate">{{ detail.book.title }}</p>
-                <p class="text-gray-500 text-xs">จำนวน: {{ detail.quantity }} เล่ม</p>
-                <p class="text-gray-500 text-xs">฿{{ detail.price.toFixed(2) }}</p>
+                <p class="text-gray-800 font-medium text-xs truncate">
+                  {{ detail.book.title }}
+                </p>
+                <p class="text-gray-500 text-xs">
+                  จำนวน: {{ detail.quantity }} เล่ม
+                </p>
+                <p class="text-gray-500 text-xs">
+                  ฿{{ detail.price.toFixed(2) }}
+                </p>
               </div>
             </div>
           </div>
@@ -201,8 +256,18 @@ const confirmReceived = async (orderId) => {
             @click="confirmReceived(order.id)"
             class="mt-4 w-full cursor-pointer bg-amber-500 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-amber-600 transition-all flex items-center justify-center space-x-1"
           >
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              ></path>
             </svg>
             <span>ได้รับของแล้ว</span>
           </button>

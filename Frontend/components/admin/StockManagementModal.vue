@@ -120,7 +120,8 @@ const submitStockChange = async () => {
         title: "ข้อผิดพลาด",
         text:
           error.data?.message ||
-          "เกิดข้อผิดพลาดในการเปลี่ยนแปลงสต็อก: " + (error.message || "Unknown error"),
+          "เกิดข้อผิดพลาดในการเปลี่ยนแปลงสต็อก: " +
+            (error.message || "Unknown error"),
         confirmButtonColor: "#f59e0b",
       });
     }
@@ -131,7 +132,7 @@ const submitStockChange = async () => {
 <template>
   <div
     v-if="props.show"
-    class="fixed inset-0 bg-gray-100 bg-opacity-75 flex items-center justify-center z-50"
+    class="fixed inset-0 pt-10 bg-gray-100 bg-opacity-75 flex items-center justify-center z-50"
   >
     <div
       class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl transform transition-all duration-300 ease-in-out"
@@ -162,7 +163,7 @@ const submitStockChange = async () => {
       </div>
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700"
-          >จำนวนที่เปลี่ยนแปลง (บวกเพื่อเพิ่ม, ลบเพื่อลด)</label
+          >จำนวนที่เปลี่ยนแปลง</label
         >
         <input
           v-model.number="stockChange"

@@ -138,7 +138,10 @@ const updateProfile = async () => {
     class="min-h-screen bg-gradient-to-br from-amber-100 via-white to-amber-100 py-12"
   >
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-      <NuxtLink to="/" class="text-sm text-blue-500 hover:underline mb-4 block ml-50">
+      <NuxtLink
+        to="/"
+        class="text-sm text-blue-500 hover:underline mb-4 block ml-50"
+      >
         ← ย้อนกลับ
       </NuxtLink>
       <!-- Header -->
