@@ -11,8 +11,8 @@ const bookId = parseInt(route.params.id);
 
 // สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
 const isAdded = ref(false);
-const isLoading = ref(true); // เพิ่มสถานะโหลด
-const showExtraInfo = ref(false); // สำหรับข้อมูลเพิ่มเติม
+const isLoading = ref(true); 
+const showExtraInfo = ref(false); 
 
 // สถานะสำหรับเก็บข้อมูลหนังสือ
 const book = ref(null);
