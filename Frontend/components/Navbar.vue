@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -26,8 +25,10 @@ const books = ref([]);
 const searchQuery = ref("");
 const filteredBooks = ref([]);
 const isDropdownOpen = ref(false);
+const isMobileMenuOpen = ref(false);
 const userIcon = ref(null);
 const dropdown = ref(null);
+const mobileMenu = ref(null);
 
 const fetchBooks = async () => {
   try {
@@ -108,6 +109,14 @@ onMounted(() => {
       ) {
         isDropdownOpen.value = false;
       }
+      
+      if (
+        mobileMenu.value &&
+        !mobileMenu.value.contains(event.target) &&
+        !event.target.closest('.hamburger-button')
+      ) {
+        isMobileMenuOpen.value = false;
+      }
     };
     document.addEventListener("click", handleClickOutside);
 
@@ -135,6 +144,10 @@ const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value;
 };
 
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
 const handleCartClick = () => {
   if (!isLoggedIn.value) {
     Swal.fire({
@@ -154,6 +167,7 @@ const handleCartClick = () => {
   } else {
     router.push("/cart");
   }
+  isMobileMenuOpen.value = false;
 };
 
 const logout = () => {
@@ -165,6 +179,7 @@ const logout = () => {
   user.value = { loggedIn: false, name: "", role: "" };
   cart.value = [];
   isDropdownOpen.value = false;
+  isMobileMenuOpen.value = false;
   router.push("/");
   Toast.fire({
     icon: "success",
@@ -172,7 +187,6 @@ const logout = () => {
   });
 };
 
-// ฟังก์ชันสำหรับการคลิกโลโก้
 const handleLogoClick = () => {
   if (userRole.value === "admin" && isLoggedIn.value) {
     router.push("/admin");
@@ -180,28 +194,35 @@ const handleLogoClick = () => {
     router.push("/");
   }
 };
+
+const navigateToLogin = () => {
+  router.push("/auth/login");
+  isMobileMenuOpen.value = false;
+};
+
+const navigateToRegister = () => {
+  router.push("/auth/register");
+  isMobileMenuOpen.value = false;
+};
+
+const navigateToProfile = () => {
+  router.push("/Profile");
+  isMobileMenuOpen.value = false;
+};
+
+const navigateToOrderHistory = () => {
+  router.push("/OrderHistory");
+  isMobileMenuOpen.value = false;
+};
+
+const navigateToAbout = () => {
+  router.push("/about");
+  isMobileMenuOpen.value = false;
+};
 </script>
 
-<style scoped>
-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
-}
-
-.group:hover .group-hover\:opacity-100,
-.group:focus-within .focus-within\:opacity-100 {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-</style>
-
 <template>
-  <nav
-    class="bg-amber-300 text-white px-6 py-8 flex justify-between items-center h-12"
-  >
+  <nav class="bg-amber-300 text-white px-6 py-8 flex justify-between items-center h-12">
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">
       <button class="cursor-pointer" @click="handleLogoClick">
@@ -213,7 +234,7 @@ nav {
           />
         </div>
       </button>
-      <span class="ml-4 text-lg font-semibold whitespace-nowrap drop-shadow">
+      <span class="ml-4 text-lg font-semibold whitespace-nowrap drop-shadow hidden md:block">
         ร้านที่รวบรวมหนังสือน้อยที่สุดในประเทศไทย
         <img
           src="/images/โป้ง.webp"
@@ -223,7 +244,8 @@ nav {
       </span>
     </div>
 
-    <div class="flex items-center space-x-4 mr-2">
+    <!-- Desktop Menu -->
+    <div class="hidden md:flex items-center space-x-4 mr-2">
       <!-- ช่องค้นหา -->
       <div
         v-if="userRole !== 'admin'"
@@ -261,12 +283,15 @@ nav {
           </div>
         </div>
       </div>
+      
       <nuxt-link
         v-if="userRole !== 'admin'"
         to="/about"
         class="hover:text-amber-100 transition font-semibold"
-        >เกี่ยวกับเรา</nuxt-link
       >
+        เกี่ยวกับเรา
+      </nuxt-link>
+      
       <!-- ไอคอนตะกร้า -->
       <nuxt-link
         v-if="userRole !== 'admin'"
@@ -390,5 +415,217 @@ nav {
         </div>
       </div>
     </div>
+
+    <!-- Mobile Menu Section -->
+    <div class="md:hidden flex items-center space-x-4">
+      <!-- ช่องค้นหาสำหรับมือถือ -->
+      <div
+        v-if="userRole !== 'admin'"
+        class="relative flex items-center bg-white rounded-full px-3 py-2 shadow"
+      >
+        <svg
+          class="w-4 h-4 text-gray-500 mr-2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="ค้นหา..."
+          class="outline-none w-20 text-sm text-gray-700 bg-transparent"
+          @input="filterBooks"
+        />
+        <!-- Dropdown ผลลัพธ์การค้นหาสำหรับมือถือ -->
+        <div
+          v-if="filteredBooks.length > 0"
+          class="absolute top-full right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg z-20"
+        >
+          <div
+            v-for="book in filteredBooks"
+            :key="book.id"
+            @click="selectBook(book)"
+            class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-gray-700"
+          >
+            {{ book.title }}
+          </div>
+        </div>
+      </div>
+
+      <!-- เกี่ยวกับเราสำหรับมือถือ -->
+      <nuxt-link
+        v-if="userRole !== 'admin'"
+        to="/about"
+        @click="navigateToAbout"
+        class="hover:text-amber-100 transition font-semibold text-sm"
+      >
+        เกี่ยวกับเรา
+      </nuxt-link>
+
+      <!-- Hamburger Button -->
+      <button
+        @click="toggleMobileMenu"
+        class="hamburger-button flex flex-col justify-center items-center w-8 h-8 space-y-1"
+      >
+        <div
+          :class="['w-6 h-0.5 bg-white transition-transform duration-300', isMobileMenuOpen ? 'rotate-45 translate-y-2' : '']"
+        ></div>
+        <div
+          :class="['w-6 h-0.5 bg-white transition-opacity duration-300', isMobileMenuOpen ? 'opacity-0' : '']"
+        ></div>
+        <div
+          :class="['w-6 h-0.5 bg-white transition-transform duration-300', isMobileMenuOpen ? '-rotate-45 -translate-y-2' : '']"
+        ></div>
+      </button>
+    </div>
+
+    <!-- Mobile Menu Dropdown -->
+    <div
+      v-if="isMobileMenuOpen"
+      class="absolute top-full left-0 w-full bg-amber-100 text-amber-800 shadow-xl z-20 md:hidden"
+      ref="mobileMenu"
+    >
+      <div class="py-4 px-6 space-y-2">
+        <!-- ข้อมูลผู้ใช้ -->
+        <div v-if="isLoggedIn" class="flex items-center space-x-3 pb-3 border-b border-amber-200">
+          <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
+            <img
+              src="/images/icon.jpg"
+              alt="User Icon"
+              class="w-full h-full object-cover"
+              @error="
+                (e) =>
+                  (e.target.src =
+                    'https://cdn-icons-png.flaticon.com/512/149/149071.png')
+              "
+            />
+          </div>
+          <span class="font-semibold">{{ userName }}</span>
+        </div>
+
+        <!-- เมนูสำหรับผู้ใช้ที่ล็อกอินแล้ว -->
+        <template v-if="isLoggedIn">
+          <button
+            v-if="userRole !== 'admin'"
+            @click="navigateToProfile"
+            class="w-full flex items-center px-4 py-3 hover:bg-amber-200 rounded-lg transition duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-6 h-6 mr-3"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+              />
+            </svg>
+            จัดการโปรไฟล์
+          </button>
+
+          <button
+            v-if="userRole !== 'admin'"
+            @click="handleCartClick"
+            class="w-full flex items-center px-4 py-3 hover:bg-amber-200 rounded-lg transition duration-200"
+          >
+            <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-6 h-6 mr-3" />
+            ตะกร้า
+            <span
+              v-if="cartCount > 0"
+              class="ml-auto bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+            >
+              {{ cartCount }}
+            </span>
+          </button>
+
+          <button
+            v-if="userRole !== 'admin'"
+            @click="navigateToOrderHistory"
+            class="w-full flex items-center px-4 py-3 hover:bg-amber-200 rounded-lg transition duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 mr-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+              />
+            </svg>
+            ประวัติการสั่งซื้อ
+          </button>
+
+          <button
+            @click="logout"
+            class="w-full flex items-center px-4 py-3 hover:bg-amber-200 rounded-lg transition duration-200"
+          >
+            <svg
+              class="w-6 h-6 mr-3"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            ออกจากระบบ
+          </button>
+        </template>
+
+        <!-- เมนูสำหรับผู้ใช้ที่ยังไม่ล็อกอิน -->
+        <template v-else>
+          <button
+            @click="navigateToLogin"
+            class="w-full bg-white text-amber-400 px-4 py-3 rounded-lg hover:bg-amber-50 transition font-semibold"
+          >
+            เข้าสู่ระบบ
+          </button>
+          <button
+            @click="navigateToRegister"
+            class="w-full bg-white text-amber-400 px-4 py-3 rounded-lg hover:bg-amber-50 transition font-semibold"
+          >
+            สมัครสมาชิก
+          </button>
+        </template>
+      </div>
+    </div>
   </nav>
 </template>
+
+<style scoped>
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.group:hover .group-hover\:opacity-100,
+.group:focus-within .focus-within\:opacity-100 {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Hamburger animation */
+.hamburger-button div {
+  transform-origin: center;
+}
+</style>
