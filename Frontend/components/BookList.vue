@@ -181,19 +181,63 @@ select option:focus,
 select option:checked {
   color: #1f2937;
 }
+
+/* Custom responsive styles */
+@media (max-width: 640px) {
+  .book-card {
+    min-height: 280px;
+  }
+  
+  .book-image {
+    height: 160px;
+  }
+  
+  .filter-controls {
+    gap: 0.5rem;
+  }
+  
+  .filter-select {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    min-width: 100px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .book-card {
+    min-height: 320px;
+  }
+  
+  .book-image {
+    height: 180px;
+  }
+}
+
+@media (min-width: 769px) {
+  .book-card {
+    min-height: 350px;
+  }
+  
+  .book-image {
+    height: 200px;
+  }
+}
 </style>
 
 <template>
-  <section class="py-6 max-w-5xl mx-auto">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-semibold text-gray-800">หนังสือทั้งหมด</h2>
-      <div class="flex space-x-4">
+  <section class="py-4 sm:py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <!-- Header with responsive layout -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+      <h2 class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800">หนังสือทั้งหมด</h2>
+      
+      <!-- Filter controls with responsive layout -->
+      <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 filter-controls">
         <!-- Filter by Category -->
         <div class="relative">
           <select
             v-model="selectedCategory"
             @change="filterBooks"
-            class="appearance-none bg-gradient-to-r from-amber-400 to-amber-500 text-white text-sm font-semibold py-2.5 px-4 pr-8 rounded-full shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 transform hover:scale-105 cursor-pointer"
+            class="filter-select appearance-none bg-gradient-to-r from-amber-400 to-amber-500 text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 pr-8 sm:pr-10 rounded-full shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 transform hover:scale-105 cursor-pointer text-sm sm:text-base w-full sm:w-auto"
           >
             <option value="">ทุกหมวดหมู่</option>
             <option
@@ -204,30 +248,19 @@ select option:checked {
               {{ category.category_name }}
             </option>
           </select>
-          <div
-            class="absolute inset-y-0 right-3 flex items-center pointer-events-none"
-          >
-            <svg
-              class="w-4 h-4 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 9l-7 7-7-7"
-              />
+          <div class="absolute inset-y-0 right-2 sm:right-3 flex items-center pointer-events-none">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         </div>
+        
         <!-- Sort By -->
         <div class="relative">
           <select
             v-model="sortBy"
             @change="sortBooks"
-            class="appearance-none bg-gradient-to-r from-rose-500 to-rose-600 text-white text-sm font-semibold py-2.5 px-4 pr-8 rounded-full shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-rose-300 transition-all duration-300 transform hover:scale-105 cursor-pointer"
+            class="filter-select appearance-none bg-gradient-to-r from-rose-500 to-rose-600 text-white font-semibold py-2 sm:py-2.5 px-3 sm:px-4 pr-8 sm:pr-10 rounded-full shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-rose-300 transition-all duration-300 transform hover:scale-105 cursor-pointer text-sm sm:text-base w-full sm:w-auto"
           >
             <option value="title-asc">ชื่อ: A-Z</option>
             <option value="title-desc">ชื่อ: Z-A</option>
@@ -236,85 +269,86 @@ select option:checked {
             <option value="stock-asc">สต็อก: น้อย-มาก</option>
             <option value="stock-desc">สต็อก: มาก-น้อย</option>
           </select>
-          <div
-            class="absolute inset-y-0 right-3 flex items-center pointer-events-none"
-          >
-            <svg
-              class="w-4 h-4 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 9l-7 7-7-7"
-              />
+          <div class="absolute inset-y-0 right-2 sm:right-3 flex items-center pointer-events-none">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Responsive book grid -->
     <div
       id="book-list"
-      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+      class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6"
     >
       <nuxt-link
         v-for="book in filteredBooks"
         :key="book.id"
         :to="`/book/${book.id}`"
         :id="`book-${book.id}`"
-        class="bg-white p-5 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-200 hover:border-amber-300 group"
+        class="book-card bg-white p-3 sm:p-4 lg:p-5 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-gray-200 hover:border-amber-300 group flex flex-col"
       >
-        <div class="relative">
+        <!-- Book image with responsive sizing -->
+        <div class="relative mb-3 flex-shrink-0">
           <img
             :src="book.image"
-            alt="Book"
-            class="w-full aspect-[3/4] object-cover rounded"
+            :alt="book.title"
+            class="book-image w-full object-cover rounded transition-transform duration-300 group-hover:scale-105"
           />
           <div
             v-if="book.stock <= 0"
-            class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-xl font-bold rounded"
+            class="absolute inset-0 bg-black/60 text-white flex items-center justify-center text-sm sm:text-lg lg:text-xl font-bold rounded"
           >
             หมด
           </div>
         </div>
-        <h3 class="text-lg font-semibold mt-2">{{ book.title }}</h3>
-        <p class="text-sm text-gray-500">คงเหลือ: {{ book.stock }} เล่ม</p>
-        <div class="flex items-center justify-between mt-2">
-          <p class="text-red-600 font-bold text-sm">{{ book.price || 0 }}฿</p>
-          <button
-            @click.prevent="addToCart(book)"
-            class="flex items-center gap-1 cursor-pointer bg-amber-400 hover:bg-amber-500 text-white text-xs font-semibold py-1 px-2 rounded transition"
-            :class="{ 'bg-green-500 hover:bg-green-600': addedBooks[book.id] }"
-          >
-            <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-6 h-6" />
-            <span v-if="!addedBooks[book.id]">ใส่ตะกร้า</span>
-            <span v-else class="flex items-center">
-              เพิ่มแล้ว
-              <svg
-                class="w-4 h-4 ml-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </span>
-          </button>
+
+        <!-- Book details with flexible layout -->
+        <div class="flex flex-col flex-grow space-y-2">
+          <h3 class="text-sm sm:text-base lg:text-lg font-semibold line-clamp-2 leading-tight">
+            {{ book.title }}
+          </h3>
+          
+          <p class="text-xs sm:text-sm text-gray-500 flex-shrink-0">
+            คงเหลือ: {{ book.stock }} เล่ม
+          </p>
+          
+          <!-- Price and cart button -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-auto pt-2 space-y-2 sm:space-y-0">
+            <p class="text-red-600 font-bold text-sm sm:text-base lg:text-lg order-2 sm:order-1">
+              {{ book.price || 0 }}฿
+            </p>
+            
+            <button
+              @click.prevent="addToCart(book)"
+              class="flex items-center justify-center gap-1 cursor-pointer bg-amber-400 hover:bg-amber-500 text-white text-xs sm:text-sm font-semibold py-1.5 sm:py-2 px-2 sm:px-3 rounded-md sm:rounded-lg transition-all duration-300 order-1 sm:order-2 w-full sm:w-auto"
+              :class="{ 'bg-green-500 hover:bg-green-600': addedBooks[book.id] }"
+            >
+              <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span v-if="!addedBooks[book.id]" class="hidden sm:inline">ใส่ตะกร้า</span>
+              <span v-if="!addedBooks[book.id]" class="sm:hidden">ใส่</span>
+              <span v-else class="flex items-center">
+                <span class="hidden sm:inline">เพิ่มแล้ว</span>
+                <span class="sm:hidden">✓</span>
+                <svg class="w-3 h-3 sm:w-4 sm:h-4 ml-1 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+            </button>
+          </div>
         </div>
       </nuxt-link>
+      
+      <!-- No books found message -->
       <div
         v-if="filteredBooks.length === 0"
-        class="col-span-full text-center text-gray-500"
+        class="col-span-full text-center text-gray-500 py-8 sm:py-12"
       >
-        ไม่พบหนังสือ
+        <div class="text-4xl sm:text-6xl mb-4">📚</div>
+        <p class="text-base sm:text-lg">ไม่พบหนังสือ</p>
+        <p class="text-sm sm:text-base text-gray-400 mt-2">ลองเปลี่ยนเงื่อนไขการค้นหาดู</p>
       </div>
     </div>
   </section>
