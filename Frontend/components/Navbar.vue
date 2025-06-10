@@ -227,7 +227,7 @@ const navigateToAbout = () => {
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">
       <button class="cursor-pointer" @click="handleLogoClick">
-        <div class="w-15 h-15 shadow-lg rounded-full overflow-hidden">
+        <div class="w-15 h-15 shadow-xl/20 rounded-full overflow-hidden ">
           <img
             src="/images/Logo.jpg"
             alt="Logo"
@@ -235,12 +235,12 @@ const navigateToAbout = () => {
           />
         </div>
       </button>
-      <span class="ml-4 text-lg font-semibold whitespace-nowrap drop-shadow hidden md:block">
+      <span class="ml-4 text-lg font-semibold whitespace-nowrap drop-shadow hidden md:block showdow-lg">
         ร้านที่รวบรวมหนังสือน้อยที่สุดในประเทศไทย
         <img
-          src="/images/โป้ง.webp"
+          src="/images/ยิ้ม.jpg"
           alt="โป้ง"
-          class="inline-block w-10 h-10 ml-2"
+          class="inline-block w-10 h-10  bg-amber-300 rounded-full shadow-lg"
         />
       </span>
     </div>
@@ -288,7 +288,7 @@ const navigateToAbout = () => {
       <nuxt-link
         v-if="userRole !== 'admin'"
         to="/about"
-        class="hover:text-amber-100 transition font-semibold"
+        class="hover:text-amber-100 transition font-semibold showdow-lg"
       >
         เกี่ยวกับเรา
       </nuxt-link>
