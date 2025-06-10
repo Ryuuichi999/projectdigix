@@ -16,4 +16,9 @@ export default defineNuxtConfig({
       tailwindcss(),
     ],
   },
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.API_BASE || 'http://localhost:3000', // ใช้ environment variable หรือ fallback ไป localhost
+    },
+  },
 })
