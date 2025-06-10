@@ -1,4 +1,4 @@
-require("dotenv").config({ path: ".env.local" });
+require("dotenv").config();
 const Hapi = require("@hapi/hapi");
 const { prismaPlugin } = require("./src/plugins/prisma");
 const routes = require("./src/routes");
