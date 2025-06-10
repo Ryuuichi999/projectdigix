@@ -60,6 +60,7 @@ const selectBook = (book) => {
   searchQuery.value = book.title;
   filteredBooks.value = [];
   scrollToBook(book.id);
+  $event.emit("highlight-book", book.id); 
 };
 
 const scrollToBook = (bookId) => {
