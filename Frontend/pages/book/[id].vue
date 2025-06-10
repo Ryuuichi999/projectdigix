@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
 import Swal from "sweetalert2";
@@ -11,8 +11,9 @@ const bookId = parseInt(route.params.id);
 
 // สถานะสำหรับเก็บว่าสินค้าถูกเพิ่มแล้วหรือไม่
 const isAdded = ref(false);
-const isLoading = ref(true); 
-const showExtraInfo = ref(false); 
+const isLoading = ref(true);
+const showExtraInfo = ref(false);
+const quantity = ref(1); // จำนวนที่ต้องการเพิ่ม
 
 // สถานะสำหรับเก็บข้อมูลหนังสือ
 const book = ref(null);
@@ -56,7 +57,7 @@ const fetchBook = async () => {
     console.error("Error fetching book:", error);
     book.value = null;
   } finally {
-    isLoading.value = false; 
+    isLoading.value = false;
   }
 };
 
@@ -72,10 +73,32 @@ const backgroundStyle = computed(() => {
   return bgColors[category] || bgColors.default;
 });
 
+// จำกัดจำนวนไม่ให้เกินสต็อก
+watch(quantity, (newQty) => {
+  if (book.value && newQty > book.value.stock) {
+    quantity.value = book.value.stock;
+  } else if (newQty < 1) {
+    quantity.value = 1;
+  }
+});
+
 // เรียก API เมื่อ component ถูก mount
 onMounted(() => {
   fetchBook();
 });
+
+// เพิ่มหรือลดจำนวน
+const increaseQuantity = () => {
+  if (book.value && quantity.value < book.value.stock) {
+    quantity.value++;
+  }
+};
+
+const decreaseQuantity = () => {
+  if (quantity.value > 1) {
+    quantity.value--;
+  }
+};
 
 const addToCart = () => {
   if (process.client) {
@@ -122,7 +145,8 @@ const addToCart = () => {
     const existingItem = cart.find((item) => item.id === book.value.id);
 
     if (existingItem) {
-      if (existingItem.quantity >= book.value.stock) {
+      const newQuantity = existingItem.quantity + quantity.value;
+      if (newQuantity > book.value.stock) {
         Swal.fire({
           icon: "warning",
           title: "สินค้าคงเหลือไม่เพียงพอ",
@@ -131,9 +155,18 @@ const addToCart = () => {
         });
         return;
       }
-      existingItem.quantity += 1;
+      existingItem.quantity = newQuantity;
     } else {
-      cart.push({ ...book.value, quantity: 1 });
+      if (quantity.value > book.value.stock) {
+        Swal.fire({
+          icon: "warning",
+          title: "สินค้าคงเหลือไม่เพียงพอ",
+          text: `คงเหลือ: ${book.value.stock} เล่ม`,
+          confirmButtonColor: "#f59e0b",
+        });
+        return;
+      }
+      cart.push({ ...book.value, quantity: quantity.value });
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -143,7 +176,7 @@ const addToCart = () => {
     }, 500);
     Toast.fire({
       icon: "success",
-      title: "เพิ่มลงตะกร้าสำเร็จ",
+      title: `เพิ่ม ${quantity.value} เล่มลงตะกร้าสำเร็จ`,
     });
     $event.emit("cart-updated");
   }
@@ -166,13 +199,13 @@ const toggleExtraInfo = () => {
   opacity: 0;
 }
 
-
 .pulse {
   animation: pulse 0.5s ease-in-out;
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -187,7 +220,62 @@ const toggleExtraInfo = () => {
 }
 
 .extra-info.active {
-  max-height: 200px; 
+  max-height: 200px;
+}
+
+/* Style for quantity controls */
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.quantity-btn {
+  background-color: #f59e0b;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.quantity-btn:hover {
+  background-color: #d97706;
+}
+
+.quantity-input {
+  width: 60px;
+  padding: 5px;
+  text-align: center;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.add-to-cart-btn {
+  background-color: #f59e0b;
+  color: white;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.add-to-cart-btn:hover {
+  background-color: #d97706;
+}
+
+.add-to-cart-btn.added {
+  background-color: #10b981;
+}
+
+.add-to-cart-btn.added:hover {
+  background-color: #059669;
 }
 </style>
 
@@ -242,31 +330,43 @@ const toggleExtraInfo = () => {
               </div>
             </div>
 
-            <div class="flex items-center gap-6 mt-6">
+            <div class="flex flex-col gap-6 mt-6">
               <p class="text-2xl font-bold text-red-600">{{ book.price }} ฿</p>
-              <button
-                @click="addToCart"
-                class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-semibold shadow flex items-center cursor-pointer transition-colors duration-300 pulse"
-                :class="{ 'bg-green-500 hover:bg-green-600': isAdded }"
-              >
-                <span v-if="!isAdded">🛒 ใส่ตะกร้า</span>
-                <span v-if="isAdded" class="flex items-center">
-                  🛒 เพิ่มแล้ว
-                  <svg
-                    class="w-4 h-4 ml-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </span>
-              </button>
+              <div class="quantity-controls flex items-center gap-2">
+                <button @click="decreaseQuantity" class="quantity-btn">-</button>
+                <input
+                  v-model.number="quantity"
+                  type="number"
+                  class="quantity-input"
+                  min="1"
+                  :max="book.stock"
+                  @change="quantity = Math.min(Math.max(1, quantity), book.stock)"
+                />
+                <button @click="increaseQuantity" class="quantity-btn">+</button>
+                <button
+                  @click="addToCart"
+                  :class="['add-to-cart-btn', { added: isAdded }]"
+                  class="ml-2"
+                >
+                  <span v-if="!isAdded">🛒 ใส่ตะกร้า</span>
+                  <span v-if="isAdded" class="flex items-center">
+                    🛒 เพิ่มแล้ว
+                    <svg
+                      class="w-4 h-4 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
