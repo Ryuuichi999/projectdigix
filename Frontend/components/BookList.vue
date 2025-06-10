@@ -3,11 +3,9 @@ import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
 import Swal from "sweetalert2";
-import { useRuntimeConfig } from '#imports'; // เพิ่มการนำเข้า useRuntimeConfig
 
 const router = useRouter();
 const { $event } = useNuxtApp();
-const { public: { apiBase } } = useRuntimeConfig(); // ดึง apiBase จาก runtimeConfig
 
 const Toast = Swal.mixin({
   toast: true,
@@ -31,7 +29,7 @@ const highlightedBookId = ref(null); // เก็บ ID ของหนังส
 
 const fetchBooks = async () => {
   try {
-    const response = await $fetch(`${apiBase}/books`); // ใช้ apiBase แทน localhost
+    const response = await $fetch("http://localhost:3000/books");
     books.value = response.map((book) => ({
       id: book.id,
       title: book.title,
@@ -47,18 +45,12 @@ const fetchBooks = async () => {
     console.error("Error fetching books:", error);
     books.value = [];
     filteredBooks.value = [];
-    Swal.fire({
-      icon: "error",
-      title: "เกิดข้อผิดพลาด",
-      text: "ไม่สามารถโหลดรายการหนังสือได้",
-      confirmButtonColor: "#f59e0b",
-    });
   }
 };
 
 const fetchCategories = async () => {
   try {
-    const response = await $fetch(`${apiBase}/categories`); // ใช้ apiBase แทน localhost
+    const response = await $fetch("http://localhost:3000/categories");
     categories.value = response.map((category) => ({
       id: category.id,
       category_name: category.category_name,
@@ -66,12 +58,6 @@ const fetchCategories = async () => {
   } catch (error) {
     console.error("Error fetching categories:", error);
     categories.value = [];
-    Swal.fire({
-      icon: "error",
-      title: "เกิดข้อผิดพลาด",
-      text: "ไม่สามารถโหลดหมวดหมู่ได้",
-      confirmButtonColor: "#f59e0b",
-    });
   }
 };
 
