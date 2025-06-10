@@ -413,10 +413,10 @@ select option:checked {
               <span v-if="!addedBooks[book.id]" class="hidden sm:inline"
                 >ใส่ตะกร้า</span
               >
-              <span v-if="!addedBooks[book.id]" class="sm:hidden">ใส่</span>
+              <span v-if="!addedBooks[book.id]" class="sm:hidden">ใส่ตะกร้า</span>
               <span v-else class="flex items-center">
                 <span class="hidden sm:inline">เพิ่มแล้ว</span>
-                <span class="sm:hidden">✓</span>
+                <span class="sm:hidden">เพิ่มแล้ว ✓</span>
                 <svg
                   class="w-3 h-3 sm:w-4 sm:h-4 ml-1 hidden sm:block"
                   fill="none"
