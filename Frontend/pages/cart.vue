@@ -4,23 +4,6 @@ import { useRouter } from "vue-router";
 import { useNuxtApp } from "nuxt/app";
 import Swal from "sweetalert2";
 
-const items = ref([
-  {
-    title: 'Address',
-    description: 'Add your address here',
-    icon: 'i-lucide-house'
-  },
-  {
-    title: 'Shipping',
-    description: 'Set your preferred shipping method',
-    icon: 'i-lucide-truck'
-  },
-  {
-    title: 'Checkout',
-    description: 'Confirm your order'
-  }
-])
-
 const router = useRouter();
 const { $event } = useNuxtApp();
 const cart = ref([]);
@@ -223,15 +206,17 @@ const proceedToCheckout = async () => {
 <template>
   <div class="min-h-screen bg-gray-100 p-6">
     <div class="max-w-4xl mx-auto">
-      <h1 class="text-3xl font-bold mt-15 text-amber-600">ตะกร้าสินค้าของคุณ</h1>
+      <h1 class="text-3xl font-bold mt-15 text-amber-600">
+        ตะกร้าสินค้าของคุณ
+      </h1>
 
-      <div v-if="cart.length > 0" class="bg-white rounded-lg shadow p-6 mt-3">
+      <div v-if="cart.length > 0" class="bg-white rounded-lg shadow p-6 mt-5">
         <!-- รายการสินค้า -->
         <div class="space-y-4">
           <div
             v-for="item in cart"
             :key="item.id"
-            class="flex items-center justify-between border-b pb-4"
+            class="flex items-center justify-between border-b pb-4 "
           >
             <div class="flex items-center space-x-4">
               <img
@@ -290,7 +275,7 @@ const proceedToCheckout = async () => {
         </div>
       </div>
 
-      <div v-else class="bg-white rounded-lg shadow p-6 text-center mt-3">
+      <div v-else class="bg-white rounded-lg shadow p-6 text-center mt-5">
         <p class="text-gray-500">ตะกร้าของคุณว่างเปล่า</p>
         <NuxtLink
           to="/"
