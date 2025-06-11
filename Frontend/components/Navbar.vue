@@ -26,9 +26,11 @@ const searchQuery = ref("");
 const filteredBooks = ref([]);
 const isDropdownOpen = ref(false);
 const isMobileMenuOpen = ref(false);
+const isCartSidebarOpen = ref(false);
 const userIcon = ref(null);
 const dropdown = ref(null);
 const mobileMenu = ref(null);
+const cartSidebar = ref(null);
 
 const fetchBooks = async () => {
   try {
@@ -60,7 +62,7 @@ const selectBook = (book) => {
   searchQuery.value = book.title;
   filteredBooks.value = [];
   scrollToBook(book.id);
-  $event.emit("highlight-book", book.id); 
+  $event.emit("highlight-book", book.id);
 };
 
 const scrollToBook = (bookId) => {
@@ -110,13 +112,19 @@ onMounted(() => {
       ) {
         isDropdownOpen.value = false;
       }
-      
       if (
         mobileMenu.value &&
         !mobileMenu.value.contains(event.target) &&
-        !event.target.closest('.hamburger-button')
+        !event.target.closest(".hamburger-button")
       ) {
         isMobileMenuOpen.value = false;
+      }
+      if (
+        cartSidebar.value &&
+        !cartSidebar.value.contains(event.target) &&
+        !event.target.closest(".cart-icon")
+      ) {
+        isCartSidebarOpen.value = false;
       }
     };
     document.addEventListener("click", handleClickOutside);
@@ -149,7 +157,7 @@ const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
 };
 
-const handleCartClick = () => {
+const toggleCartSidebar = () => {
   if (!isLoggedIn.value) {
     Swal.fire({
       icon: "warning",
@@ -166,8 +174,52 @@ const handleCartClick = () => {
       }
     });
   } else {
-    router.push("/cart");
+    isCartSidebarOpen.value = !isCartSidebarOpen.value;
   }
+};
+
+const updateQuantity = (item, change) => {
+  const newQuantity = item.quantity + change;
+  if (newQuantity <= 0) {
+    removeFromCart(item.id, event);
+    return;
+  }
+  if (newQuantity > (item.stock || 10)) {
+    Swal.fire({
+      icon: "warning",
+      title: "สินค้าคงเหลือไม่เพียงพอ",
+      text: `คงเหลือ: ${item.stock || 10} ชิ้น`,
+      confirmButtonColor: "#f59e0b",
+    });
+    return;
+  }
+  item.quantity = newQuantity;
+  if (process.client) {
+    localStorage.setItem("cart", JSON.stringify(cart.value));
+    $event.emit("cart-updated");
+  }
+};
+
+const removeFromCart = (id, event) => {
+  if (event) {
+    event.stopPropagation();
+  }
+  cart.value = cart.value.filter((item) => item.id !== id);
+  if (process.client) {
+    localStorage.setItem("cart", JSON.stringify(cart.value));
+    $event.emit("cart-updated");
+  }
+};
+
+const viewCart = () => {
+  router.push("/cart");
+  isCartSidebarOpen.value = false;
+  isMobileMenuOpen.value = false;
+};
+
+const proceedToCheckout = () => {
+  router.push("/checkout");
+  isCartSidebarOpen.value = false;
   isMobileMenuOpen.value = false;
 };
 
@@ -215,19 +267,16 @@ const navigateToOrderHistory = () => {
   router.push("/OrderHistory");
   isMobileMenuOpen.value = false;
 };
-
-const navigateToAbout = () => {
-  router.push("/about");
-  isMobileMenuOpen.value = false;
-};
 </script>
 
 <template>
-  <nav class="bg-amber-300 text-white px-6 py-8 flex justify-between items-center h-12">
+  <nav
+    class="bg-amber-300 text-white px-6 py-8 flex justify-between items-center h-12 fixed top-0 left-0 w-full z-1000"
+  >
     <!-- Logo + Slogan -->
     <div class="flex items-center ml-2">
       <button class="cursor-pointer" @click="handleLogoClick">
-        <div class="w-15 h-15 shadow-xl/20 rounded-full overflow-hidden ">
+        <div class="w-15 h-15 shadow-xl/20 rounded-full overflow-hidden">
           <img
             src="/images/Logo.jpg"
             alt="Logo"
@@ -235,12 +284,14 @@ const navigateToAbout = () => {
           />
         </div>
       </button>
-      <span class="ml-4 text-lg font-semibold whitespace-nowrap drop-shadow hidden md:block showdow-lg">
+      <span
+        class="ml-4 text-lg font-semibold whitespace-nowrap drop-shadow hidden md:block showdow-lg"
+      >
         ร้านที่รวบรวมหนังสือน้อยที่สุดในประเทศไทย
         <img
           src="/images/ยิ้ม.jpg"
           alt="โป้ง"
-          class="inline-block w-10 h-10  bg-amber-300 rounded-full shadow-lg"
+          class="inline-block w-10 h-10 bg-amber-300 rounded-full shadow-lg"
         />
       </span>
     </div>
@@ -269,7 +320,6 @@ const navigateToAbout = () => {
           class="outline-none w-48 text-sm text-gray-700 bg-transparent focus:w-64 transition-all duration-300"
           @input="filterBooks"
         />
-        <!-- Dropdown ผลลัพธ์การค้นหา -->
         <div
           v-if="filteredBooks.length > 0"
           class="absolute top-full left-0 mt-2 w-full bg-white border rounded-lg shadow-lg z-20"
@@ -284,30 +334,25 @@ const navigateToAbout = () => {
           </div>
         </div>
       </div>
-      
-      <nuxt-link
-        v-if="userRole !== 'admin'"
-        to="/about"
-        class="hover:text-amber-100 transition font-semibold showdow-lg"
-      >
-        เกี่ยวกับเรา
-      </nuxt-link>
-      
+
       <!-- ไอคอนตะกร้า -->
-      <nuxt-link
+      <div
         v-if="userRole !== 'admin'"
-        to="/cart"
-        @click.prevent="handleCartClick"
-        class="relative flex items-center"
+        class="relative cart-icon"
+        @click="toggleCartSidebar"
       >
-        <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-8 h-8" />
+        <img
+          src="/images/ตะกร้า.png"
+          alt="ตะกร้า"
+          class="w-8 h-8 cursor-pointer"
+        />
         <span
           v-if="cartCount > 0"
           class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
         >
           {{ cartCount }}
         </span>
-      </nuxt-link>
+      </div>
 
       <!-- เมนูผู้ใช้ -->
       <div class="relative">
@@ -335,18 +380,15 @@ const navigateToAbout = () => {
           <nuxt-link
             to="/auth/login"
             class="bg-white text-amber-400 px-3 py-1 rounded hover:bg-amber-100 transition font-semibold"
+            >เข้าสู่ระบบ</nuxt-link
           >
-            เข้าสู่ระบบ
-          </nuxt-link>
           <nuxt-link
             to="/auth/register"
             class="bg-white text-amber-400 px-3 py-1 rounded hover:bg-amber-100 transition font-semibold"
+            >สมัครสมาชิก</nuxt-link
           >
-            สมัครสมาชิก
-          </nuxt-link>
         </div>
 
-        <!-- Dropdown เมนู -->
         <div
           v-if="isDropdownOpen"
           class="absolute -right-9 mt-3 w-48 bg-amber-100 text-amber-800 rounded-lg shadow-xl z-10 border border-amber-200"
@@ -419,7 +461,6 @@ const navigateToAbout = () => {
 
     <!-- Mobile Menu Section -->
     <div class="md:hidden flex items-center space-x-4">
-      <!-- ช่องค้นหาสำหรับมือถือ -->
       <div
         v-if="userRole !== 'admin'"
         class="relative flex items-center bg-white rounded-full px-3 py-2 shadow"
@@ -441,7 +482,6 @@ const navigateToAbout = () => {
           class="outline-none w-20 text-sm text-gray-700 bg-transparent"
           @input="filterBooks"
         />
-        <!-- Dropdown ผลลัพธ์การค้นหาสำหรับมือถือ -->
         <div
           v-if="filteredBooks.length > 0"
           class="absolute top-full right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg z-20"
@@ -457,29 +497,27 @@ const navigateToAbout = () => {
         </div>
       </div>
 
-      <!-- เกี่ยวกับเราสำหรับมือถือ -->
-      <nuxt-link
-        v-if="userRole !== 'admin'"
-        to="/about"
-        @click="navigateToAbout"
-        class="hover:text-amber-100 transition font-semibold text-sm"
-      >
-        เกี่ยวกับเรา
-      </nuxt-link>
-
-      <!-- Hamburger Button -->
       <button
         @click="toggleMobileMenu"
         class="hamburger-button flex flex-col justify-center items-center w-8 h-8 space-y-1"
       >
         <div
-          :class="['w-6 h-0.5 bg-white transition-transform duration-300', isMobileMenuOpen ? 'rotate-45 translate-y-2' : '']"
+          :class="[
+            'w-6 h-0.5 bg-white transition-transform duration-300',
+            isMobileMenuOpen ? 'rotate-45 translate-y-2' : '',
+          ]"
         ></div>
         <div
-          :class="['w-6 h-0.5 bg-white transition-opacity duration-300', isMobileMenuOpen ? 'opacity-0' : '']"
+          :class="[
+            'w-6 h-0.5 bg-white transition-opacity duration-300',
+            isMobileMenuOpen ? 'opacity-0' : '',
+          ]"
         ></div>
         <div
-          :class="['w-6 h-0.5 bg-white transition-transform duration-300', isMobileMenuOpen ? '-rotate-45 -translate-y-2' : '']"
+          :class="[
+            'w-6 h-0.5 bg-white transition-transform duration-300',
+            isMobileMenuOpen ? '-rotate-45 -translate-y-2' : '',
+          ]"
         ></div>
       </button>
     </div>
@@ -491,8 +529,10 @@ const navigateToAbout = () => {
       ref="mobileMenu"
     >
       <div class="py-4 px-6 space-y-2">
-        <!-- ข้อมูลผู้ใช้ -->
-        <div v-if="isLoggedIn" class="flex items-center space-x-3 pb-3 border-b border-amber-200">
+        <div
+          v-if="isLoggedIn"
+          class="flex items-center space-x-3 pb-3 border-b border-amber-200"
+        >
           <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
             <img
               src="/images/icon.png"
@@ -507,8 +547,6 @@ const navigateToAbout = () => {
           </div>
           <span class="font-semibold">{{ userName }}</span>
         </div>
-
-        <!-- เมนูสำหรับผู้ใช้ที่ล็อกอินแล้ว -->
         <template v-if="isLoggedIn">
           <button
             v-if="userRole !== 'admin'"
@@ -531,10 +569,9 @@ const navigateToAbout = () => {
             </svg>
             จัดการโปรไฟล์
           </button>
-
           <button
             v-if="userRole !== 'admin'"
-            @click="handleCartClick"
+            @click="toggleCartSidebar"
             class="w-full flex items-center px-4 py-3 hover:bg-amber-200 rounded-lg transition duration-200"
           >
             <img src="/images/ตะกร้า.png" alt="ตะกร้า" class="w-6 h-6 mr-3" />
@@ -546,7 +583,6 @@ const navigateToAbout = () => {
               {{ cartCount }}
             </span>
           </button>
-
           <button
             v-if="userRole !== 'admin'"
             @click="navigateToOrderHistory"
@@ -568,7 +604,6 @@ const navigateToAbout = () => {
             </svg>
             ประวัติการสั่งซื้อ
           </button>
-
           <button
             @click="logout"
             class="w-full flex items-center px-4 py-3 hover:bg-amber-200 rounded-lg transition duration-200"
@@ -589,8 +624,6 @@ const navigateToAbout = () => {
             ออกจากระบบ
           </button>
         </template>
-
-        <!-- เมนูสำหรับผู้ใช้ที่ยังไม่ล็อกอิน -->
         <template v-else>
           <button
             @click="navigateToLogin"
@@ -605,6 +638,106 @@ const navigateToAbout = () => {
             สมัครสมาชิก
           </button>
         </template>
+      </div>
+    </div>
+
+    <!-- Sidebar ตะกร้าสินค้า -->
+    <div
+      v-if="isCartSidebarOpen"
+      class="fixed top-0 right-0 w-1/3 h-full bg-white shadow-2xl p-6 z-50 overflow-y-auto transition-transform duration-300 ease-in-out"
+      :class="{
+        'translate-x-0': isCartSidebarOpen,
+        'translate-x-full': !isCartSidebarOpen,
+      }"
+      ref="cartSidebar"
+    >
+      <div class="flex justify-between items-center mb-6 border-b pb-3">
+        <h3 class="text-2xl font-bold text-gray-900">ตะกร้าสินค้า</h3>
+
+        <p class="mt-1 pr-30 text-sm text-gray-600">
+          (มีสินค้า {{ cartCount }} ชิ้น)
+        </p>
+
+        <button
+          @click="isCartSidebarOpen = false"
+          class="text-gray-600 hover:text-gray-900 text-3xl"
+        >
+          ×
+        </button>
+      </div>
+
+      <div v-if="cart.length > 0" class="space-y-2">
+        <div
+          v-for="item in cart"
+          :key="item.id"
+          class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition duration-200"
+        >
+          <img
+            :src="item.image"
+            alt="Product"
+            class="w-20 h-20 object-cover rounded-md mr-3"
+          />
+          <div class="flex-1">
+            <p class="text-base font-medium text-gray-800">{{ item.title }}</p>
+            <p class="mt-1 text-xs text-gray-600">
+              ฿{{ item.price.toLocaleString() }} x {{ item.quantity }}
+            </p>
+            <p class="mt-1 text-sm text-red-500 font-semibold">
+              ฿{{ (item.price * item.quantity).toLocaleString() }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button
+              @click="updateQuantity(item, -1)"
+              class="w-6 h-6 border-1 rounded-full flex items-center justify-center hover:bg-red-300 text-red-500 text-xs font-semibold"
+            >
+              -
+            </button>
+            <span class="text-sm font-semibold text-gray-800">{{
+              item.quantity
+            }}</span>
+            <button
+              @click="updateQuantity(item, 1)"
+              class="w-6 h-6 border-1 rounded-full flex items-center justify-center hover:bg-red-300 text-red-500 text-xs font-semibold"
+            >
+              +
+            </button>
+            <button
+              @click="removeFromCart(item.id, $event)"
+              class="text-red-600 hover:text-red-800 text-5xl ml-2 -mt-19"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        <div class="mt-6 pt-4">
+          <p
+            class="text-lg font-bold text-white bg-red-600 p-2 rounded-lg shadow-md"
+          >
+            ยอดรวม: ฿{{
+              cart
+                .reduce((total, item) => total + item.price * item.quantity, 0)
+                .toLocaleString()
+            }}
+          </p>
+        </div>
+      </div>
+      <div v-else class="text-center text-gray-500 mt-20">
+        ไม่มีสินค้าในตะกร้า
+      </div>
+      <div class="mt-6 flex justify-between space-x-4">
+        <button
+          @click="viewCart"
+          class="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 font-semibold transition duration-200"
+        >
+          ดูในตะกร้า
+        </button>
+        <button
+          @click="proceedToCheckout"
+          class="flex-1 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 font-semibold transition duration-200"
+        >
+          สั่งซื้อ
+        </button>
       </div>
     </div>
   </nav>
@@ -628,5 +761,21 @@ nav {
 /* Hamburger animation */
 .hamburger-button div {
   transform-origin: center;
+}
+
+/* Sidebar ตะกร้า */
+.cart-icon {
+  position: relative;
+  cursor: pointer;
+}
+
+.cart-sidebar-enter-active,
+.cart-sidebar-leave-active {
+  transition: transform 0.3s ease-in-out;
+}
+
+.cart-sidebar-enter-from,
+.cart-sidebar-leave-to {
+  transform: translateX(100%);
 }
 </style>
