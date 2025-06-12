@@ -354,7 +354,7 @@ const goToCheckout = () => {
           <div class="flex items-center">
             <div
               @click="goToCart"
-              class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold cursor-pointer transition-colors bg-pink-200 text-pink-500"
+              class="w-10 h-10 rounded-full flex items-center justify-center font-bold cursor-pointer transition-colors bg-pink-200 text-pink-500"
             >
               1
             </div>
