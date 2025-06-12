@@ -429,7 +429,7 @@ const confirmOrder = async () => {
                     <div class="flex items-center space-x-3">
                       <button
                         @click="updateQuantity(item, -1)"
-                        class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                        class="w-8 h-8 cursor-pointer border-1 rounded-full flex items-center justify-center hover:bg-red-300 text-red-500 text-xs font-semibold"
                         :disabled="item.quantity <= 1"
                       >
                         -
@@ -437,14 +437,14 @@ const confirmOrder = async () => {
                       <span class="font-medium">{{ item.quantity }}</span>
                       <button
                         @click="updateQuantity(item, 1)"
-                        class="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                        class="w-8 h-8 cursor-pointer border-1 rounded-full flex items-center justify-center hover:bg-red-300 text-red-500 text-xs font-semibold"
                         :disabled="item.quantity >= item.stock"
                       >
                         +
                       </button>
                       <button
                         @click="removeFromCart(item.id)"
-                        class="ml-4 text-gray-400 hover:text-red-500"
+                        class="ml-4 text-gray-400 cursor-pointer hover:text-red-500 "
                       >
                         <svg
                           class="w-5 h-5"
@@ -509,7 +509,7 @@ const confirmOrder = async () => {
 
               <button
                 @click="goToStep(2)"
-                class="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition-colors font-medium"
+                class="w-full bg-red-500 cursor-pointer text-white py-3 rounded-lg hover:bg-red-600 transition-colors font-medium"
               >
                 ดำเนินการต่อ
               </button>
@@ -668,7 +668,7 @@ const confirmOrder = async () => {
                 <button
                   @click="confirmOrder"
                   :disabled="!selectedAddressId || isLoading"
-                  class="bg-gray-400 text-white px-6 py-2 rounded-lg hover:bg-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="bg-red-500 text-white cursor-pointer px-6 py-2 rounded-lg hover:bg-red-600 transition-colors "
                 >
                   <span v-if="isLoading">กำลังดำเนินการ...</span>
                   <span v-else>ยืนยัน</span>

@@ -431,7 +431,7 @@ const navigateToOrderHistory = () => {
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
               />
             </svg>
             ประวัติการสั่งซื้อ
@@ -660,9 +660,9 @@ const navigateToOrderHistory = () => {
 
         <button
           @click="isCartSidebarOpen = false"
-          class="text-gray-600 hover:text-gray-900 text-3xl"
+          class="text-gray-600 cursor-pointer hover:text-gray-900 text-3xl"
         >
-          ×
+          x
         </button>
       </div>
 
@@ -689,7 +689,7 @@ const navigateToOrderHistory = () => {
           <div class="flex items-center space-x-2">
             <button
               @click="updateQuantity(item, -1)"
-              class="w-6 h-6 border-1 rounded-full flex items-center justify-center hover:bg-red-300 text-red-500 text-xs font-semibold"
+              class="w-6 h-6 border-1 cursor-pointer rounded-full flex items-center justify-center hover:bg-red-300 text-red-500 text-xs font-semibold"
             >
               -
             </button>
@@ -698,13 +698,13 @@ const navigateToOrderHistory = () => {
             }}</span>
             <button
               @click="updateQuantity(item, 1)"
-              class="w-6 h-6 border-1 rounded-full flex items-center justify-center hover:bg-red-300 text-red-500 text-xs font-semibold"
+              class="w-6 h-6 border-1  cursor-pointer rounded-full flex items-center justify-center hover:bg-red-300 text-red-500 text-xs font-semibold"
             >
               +
             </button>
             <button
               @click="removeFromCart(item.id, $event)"
-              class="text-red-600 hover:text-red-800 text-5xl ml-2 -mt-19"
+              class="text-red-600 cursor-pointer hover:text-red-800 text-5xl ml-2 -mt-19"
             >
               ×
             </button>
@@ -728,13 +728,13 @@ const navigateToOrderHistory = () => {
       <div class="mt-6 flex justify-between space-x-4">
         <button
           @click="viewCart"
-          class="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 font-semibold transition duration-200"
+          class="flex-1 bg-gray-200 cursor-pointer text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 font-semibold transition duration-200"
         >
           ดูในตะกร้า
         </button>
         <button
           @click="proceedToCheckout"
-          class="flex-1 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 font-semibold transition duration-200"
+          class="flex-1 bg-amber-500 cursor-pointer text-white px-4 py-2 rounded-lg hover:bg-amber-600 font-semibold transition duration-200"
         >
           สั่งซื้อ
         </button>
