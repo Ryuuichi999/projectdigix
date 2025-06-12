@@ -25,7 +25,7 @@ const filteredBooks = ref([]);
 const categories = ref([]);
 const selectedCategory = ref("");
 const sortBy = ref("title-asc");
-const highlightedBookId = ref(null); // เก็บ ID ของหนังสือที่เน้น
+const highlightedBookId = ref(null);
 
 const fetchBooks = async () => {
   try {
@@ -211,9 +211,9 @@ select option:checked {
 
   .book-card.highlighted {
     animation: highlightPulse 1.5s ease-in-out;
-    border-color: #ffc107 !important; /* สีขอบเด่น */
-    transform: scale(1.1); /* ขยายขนาด */
-    z-index: 10; /* อยู่ชั้นบน */
+    border-color: #ffc107 !important; 
+    transform: scale(1.1); 
+    z-index: 10; 
     transition: all 1s ease;
   }
   .book-image {
@@ -237,9 +237,9 @@ select option:checked {
   }
   .book-card.highlighted {
     animation: highlightPulse 1s ease-in-out;
-    border-color: #ffc107 !important; /* สีขอบเด่น */
-    transform: scale(1.05); /* ขยายขนาด */
-    z-index: 10; /* อยู่ชั้นบน */
+    border-color: #ffc107 !important; 
+    transform: scale(1.05); 
+    z-index: 10; 
     transition: all 0.3s ease;
   }
   .book-image {
@@ -253,9 +253,9 @@ select option:checked {
   }
   .book-card.highlighted {
     animation: highlightPulse 1s ease-in-out;
-    border-color: #ffc107 !important; /* สีขอบเด่น */
-    transform: scale(1.05); /* ขยายขนาด */
-    z-index: 10; /* อยู่ชั้นบน */
+    border-color: #ffc107 !important;
+    transform: scale(1.05); 
+    z-index: 10; 
     transition: all 0.3s ease;
   }
   .book-image {
