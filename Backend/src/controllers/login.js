@@ -32,7 +32,7 @@ const login = {
         { 
           id: user.id, 
           email: user.email, 
-          username: user.username, // ใช้ username จากฐานข้อมูล
+          username: user.username, 
           role: user.role || "user" 
         },
         JWT_SECRET,
