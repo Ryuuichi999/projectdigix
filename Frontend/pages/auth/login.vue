@@ -49,7 +49,7 @@ const handleLogin = async () => {
     if (process.client) {
       const userData = {
         loggedIn: true,
-        name: userPayload.email.split('@')[0], 
+        name: userPayload.username, 
         role: userPayload.role || 'user',
         id: userPayload.id,
       };
