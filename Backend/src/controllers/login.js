@@ -2,8 +2,7 @@ const bcrypt = require("bcrypt");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken"); 
-require("dotenv").config(); 
-
+require("dotenv").config();
 
 const JWT_SECRET = process.env.JWT_SECRET; 
 const login = {
@@ -30,7 +29,12 @@ const login = {
       }
 
       const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role || "user" },
+        { 
+          id: user.id, 
+          email: user.email, 
+          username: user.username, // ใช้ username จากฐานข้อมูล
+          role: user.role || "user" 
+        },
         JWT_SECRET,
         { expiresIn: "1h" }
       );
